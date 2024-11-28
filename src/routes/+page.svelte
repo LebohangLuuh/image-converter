@@ -12,12 +12,24 @@
 </h1>
 
 <div
-  class="pl-96 ml-52 container justify-center align-middle items-center display-flex mb-16 mt-16"
+  class="space-x-8 ml-36 container justify-center align-middle items-center flex flex-row mb-16 mt-16"
 >
-  <a href="/" class="card p-4">Images</a>
-  <a href="/" class="card p-4">Audios</a>
-  <a href="/" class="card p-4">Videos</a>
-  <a href="/" class="card p-4">Documents</a>
+  <a href="/" class="card p-4">
+    <img src="./undraw_Recording.png" alt="Images" class="image-class h-20" />
+    Images
+  </a>
+  <a href="../routes/Audio" class="card p-4">
+    <img src="./undraw_Recording.png" alt="Images" class="image-class h-20" />
+    Audio
+  </a>
+  <a href="../routes/Video" class="card p-4">
+    <img src="./undraw_Recording.png" alt="Images" class="image-class h-20" />
+    Videos
+  </a>
+  <a href="../routes/Docs" class="card p-4">
+    <img src="./undraw_Recording.png" alt="Images" class="image-class h-20" />
+    Documents
+  </a>
 </div>
 
 <ImageConverter />
