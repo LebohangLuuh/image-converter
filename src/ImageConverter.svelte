@@ -94,7 +94,7 @@
   <FileDropzone name="files" accept="image/*" on:change={handleFileChange}>
   </FileDropzone>
 
-  <span style="color: #e76f6f;">Select Format</span>
+  <span style="color:aqua;">Select Format</span>
 
   <select class="select w-[45%] mt-5 ml-5" bind:value={$selectedFormat}>
     <option value="Select format" disabled selected>Select format</option>
