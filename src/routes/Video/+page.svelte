@@ -3,7 +3,8 @@
   import { FileDropzone } from "@skeletonlabs/skeleton";
   import { onMount } from "svelte";
 
-  let selectedFormat = "mp4"; 
+  let selectedFormat = ""; 
+  let videoSrc = ""; // Source for the video player
 
   let ffmpeg: any;
 
@@ -49,7 +50,7 @@
     <option value="mkv">mkv</option>
   </select>
 
-  <button type="button" class="btn variant-filled-primary ml-5 w-[25%]" on:click={() => downloadVideo()}>
+  <button type="button" class="btn variant-filled-primary ml-5 w-[25%]" on:click={() => downloadVideo(videoSrc)}>
     Download Video
   </button>
 </div>
