@@ -92,7 +92,7 @@
   <div
     class=" mt-0 ml-10"
   >
-  <FileDropzone name="files" accept="image/*" on:change={handleFileChange}>
+  <FileDropzone name="images" accept="image/*" on:change={handleFileChange}>
   </FileDropzone>
 
   <span style="color:aqua;">Select Format</span>

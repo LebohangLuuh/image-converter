@@ -46,7 +46,7 @@ import MediaButton from "../../lib/components/MediaButton.svelte";
   <div
     class=" mt-0 ml-10"
   >
-  <FileDropzone name="files" accept="video/*" on:change={transcode} />
+  <FileDropzone name="videos" accept="video/*" on:change={transcode} />
 
   <span style="color:aqua;">Select Format</span>
 

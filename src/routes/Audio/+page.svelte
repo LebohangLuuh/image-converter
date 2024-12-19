@@ -12,7 +12,7 @@
 <div
   class=" mt-0 ml-10"
 >
-  <FileDropzone name="files" accept="audio/*" on:change{transcode} />
+  <FileDropzone name="audios" accept="audio/*" on:change{transcode} />
 
   <span style="color:aqua;">Select Format</span>
 
