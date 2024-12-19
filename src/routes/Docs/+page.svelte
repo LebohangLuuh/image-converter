@@ -2,10 +2,11 @@
   import { FileDropzone } from '@skeletonlabs/skeleton';
   import MediaButton from '../../lib/components/MediaButton.svelte';
   import { onMount } from 'svelte';
+  import SideBar from '$lib/components/SideBar.svelte';
 
   let selectedFormat = '';
   let convertedFileUrl = '';
-  let ffmpeg;
+  let ffmpeg: { load: () => any; FS: (arg0: string, arg1: string, arg2: Uint8Array | undefined) => void; run: (arg0: string, arg1: any, arg2: string) => any; };
   let isLoading = false;
 
   onMount(async () => {
@@ -74,7 +75,11 @@
   }
 </script>
 
+
 <MediaButton />
+
+<SideBar />
+
 
 <div
   class="pl-96 pr-44 ml-36 justify-center align-middle items-center display-flex w-[70%]"

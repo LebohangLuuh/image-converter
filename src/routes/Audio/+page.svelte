@@ -1,9 +1,12 @@
 <script lang="ts">
   import { FileDropzone } from "@skeletonlabs/skeleton";
   import MediaButton from "../../lib/components/MediaButton.svelte";
+  import SideBar from "$lib/components/SideBar.svelte";
 </script>
 
 <MediaButton />
+
+<SideBar />
 
 <div
   class="pl-96 pr-44 ml-36 justify-center align-middle items-center display-flex w-[70%]"
