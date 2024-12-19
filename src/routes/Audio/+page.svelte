@@ -8,21 +8,22 @@
 
 <SideBar />
 
+<div class="card w-[60%] pr-10 pb-10 pt-10 ml-[30%] mt-[-10%]">
 <div
-  class="pl-96 pr-44 ml-36 justify-center align-middle items-center display-flex w-[70%]"
+  class=" mt-0 ml-10"
 >
   <FileDropzone name="files" accept="audio/*" on:change{transcode} />
 
   <span style="color:aqua;">Select Format</span>
 
-  <select class="select w-[45%] mt-5 ml-5">
-    <option value="Select format" disabled selected>Select format</option>
+  <select class="select w-[65%] mt-5 ml-5">
+    <option value="" disabled selected>Select format</option>
     <option value="mp3">mp3</option>
     <option value="m4a">m4a</option>
     <option value="wav">wav</option>
   </select>
-
-  <button type="button" class="btn variant-filled-primary ml-5 w-[25%]"
+</div>
+<button type="button" class="btn variant-filled-primary mt-5 ml-44 w-[50%]"
     >Download Audio</button
   >
 </div>

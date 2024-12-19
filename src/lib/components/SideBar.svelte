@@ -1,14 +1,17 @@
+<script>
+import '@fortawesome/fontawesome-free/css/all.min.css';
+</script>
 
 <div class="mt-0" style="margin-left: 155px;">
 <ul>
-    <li style="--i:6" data-icon="&#xf015"><a href="/">Image</a></li>
-    <li style="--i:5" data-icon="&#xf2bb"><a href=".//../Docs">Document</a></li>
-    <li style="--i:4" data-icon="&#xf03a"><a href=".//../Audio">Audio</a></li>
-    <li style="--i:3" data-icon="&#xf07c"><a href=".//../Video">Video</a></li>
-    <li style="--i:2" data-icon="&#xf533"><a href=".//../Setting">Settings</a></li>
-    <li style="--i:1" data-icon="&#xf40"><a href="/">Exit</a></li>
+    <li style="--i:6" data-icon="&#xf03e"><a href="/">Image</a></li>
+    <li style="--i:5" data-icon="&#xf15b"><a href=".//../Docs">Document</a></li>
+    <li style="--i:4" data-icon="&#xf001"><a href=".//../Audio">Audio</a></li>
+    <li style="--i:3" data-icon="&#xf03d"><a href=".//../Video">Video</a></li>
+    <li style="--i:1" data-icon="&#xf2f5"><a href="/">Exit</a></li>
 </ul>
 </div>
+
 <style>
     ul {
         position: relative;

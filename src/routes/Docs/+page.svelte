@@ -81,9 +81,10 @@
 <SideBar />
 
 
-<div
-  class="pl-96 pr-44 ml-36 justify-center align-middle items-center display-flex w-[70%]"
->
+<div class="card w-[60%] pr-10 pb-10 pt-10 ml-[30%] mt-[-10%]">
+  <div
+    class=" mt-0 ml-10"
+  >
 <FileDropzone 
   name="files" 
   accept=".docx, .pdf, .pptx, .xls, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/pdf, application/vnd.openxmlformats-officedocument.presentationml.presentation, application/vnd.ms-excel" 
@@ -91,7 +92,7 @@
 />
   <span style="color:aqua;">Select Format</span>
 
-  <select class="select w-[45%] mt-5 ml-5" on:change={handleFormatChange}>
+  <select class="select w-[65%] mt-5 ml-5" on:change={handleFormatChange}>
     <option value="" disabled selected>Select format</option>
     <option value="docx">docx</option>
     <option value="pdf">pdf</option>
@@ -99,11 +100,13 @@
     <option value="xls">xls</option>
   </select>
 
-  <button type="button" on:click={downloadFile} class="btn variant-filled-primary ml-5 w-[25%]">
-    Download File
-  </button>
+  
 
   {#if isLoading}
     <p>Loading...</p>
   {/if}
+</div>
+<button type="button" on:click={downloadFile} class="btn variant-filled-primary mt-5 ml-44 w-[50%]">
+  Download File
+</button>
 </div>

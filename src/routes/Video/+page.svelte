@@ -42,18 +42,24 @@ import MediaButton from "../../lib/components/MediaButton.svelte";
 
 <SideBar />
 
-<div class="pl-96 pr-44 ml-36 justify-center align-middle items-center display-flex w-[70%]">
+<div class="card w-[60%] pr-10 pb-10 pt-10 ml-[30%] mt-[-10%]">
+  <div
+    class=" mt-0 ml-10"
+  >
   <FileDropzone name="files" accept="video/*" on:change={transcode} />
 
   <span style="color:aqua;">Select Format</span>
 
-  <select class="select w-[45%] mt-5 ml-5" bind:value={selectedFormat}>
+  <select class="select w-[65%] mt-5 ml-5" bind:value={selectedFormat}>
+    <option value="" disabled selected>Select format</option>
     <option value="webm">webm</option>
     <option value="mp4">mp4</option>
     <option value="mkv">mkv</option>
   </select>
 
-  <button type="button" class="btn variant-filled-primary ml-5 w-[25%]" on:click={() => downloadVideo(videoSrc)}>
-    Download Video
-  </button>
+  
+</div>
+<button type="button" class="btn variant-filled-primary mt-5 ml-44 w-[50%]" on:click={() => downloadVideo(videoSrc)}>
+  Download Video
+</button>
 </div>
