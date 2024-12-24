@@ -88,7 +88,7 @@
   }
 </script>
 
-<div class="card w-[60%] pr-10 pb-10 pt-10 ml-[30%] mt-[-10%]">
+<div class="card w-[50%] pr-10 pb-10 pt-10 ml-[30%] mt-[-10%]">
   <div
     class=" mt-0 ml-10"
   >
