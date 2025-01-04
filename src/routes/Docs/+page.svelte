@@ -6,107 +6,125 @@
 
   let selectedFormat = '';
   let convertedFileUrl = '';
-  let ffmpeg: { load: () => any; FS: (arg0: string, arg1: string, arg2: Uint8Array | undefined) => void; run: (arg0: string, arg1: any, arg2: string) => any; };
   let isLoading = false;
-
-  onMount(async () => {
-    ffmpeg = createFFmpeg({ log: true });
-    await ffmpeg.load();
-  });
-
-  async function transcode(event: CustomEvent) {
-    try {
-      const files = event.detail.files;
-      const file = files[0];
-      const outputFormat = selectedFormat;
-
-      if (!file || !outputFormat) {
-        console.error('No file or format selected.');
-        return;
-      }
-
-      isLoading = true;
-
-      // Read file as array buffer
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const inputData = event.target?.result;
-        if (!inputData) return;
-
-        // Create FFmpeg input
-        ffmpeg.FS('writeFile', file.name, new Uint8Array(inputData));
-
-        // Run conversion command
-        await ffmpeg.run('-i', file.name, `output.${outputFormat}`);
-
-        // Get output file
-        const output = ffmpeg.FS('readFile', `output.${outputFormat}`);
-
-        // Create a blob from the output file
-        const blob = new Blob([output.buffer], { type: `application/${outputFormat}` });
-
-        // Create a URL for the blob
-        convertedFileUrl = URL.createObjectURL(blob);
-      };
-      reader.readAsArrayBuffer(file);
-    } catch (error) {
-      console.error('Error converting file:', error);
-    } finally {
-      isLoading = false;
-    }
-  }
+  let errorMessage = '';
+  let file: File | null = null;
 
   function handleFormatChange(event: Event) {
     const target = event.target as HTMLSelectElement;
     selectedFormat = target.value;
   }
 
-  function downloadFile() {
-    if (!convertedFileUrl) {
-      console.error('No file available for download.');
+  async function transcode(event: CustomEvent) {
+    const files = event.detail.files;
+    if (files.length > 0) {
+      file = files[0];
+    }
+  }
+
+  async function convertAndDownloadFile() {
+    if (!file || !selectedFormat) {
+      errorMessage = 'Please select a file and format.';
       return;
     }
-    const a = document.createElement('a');
-    a.href = convertedFileUrl;
-    a.download = `converted.${selectedFormat}`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+
+    isLoading = true;
+    errorMessage = '';
+
+    try {
+      
+      const response = await fetch('/api/convert', {
+        method: 'POST',
+        body: JSON.stringify({
+          fileName: file.name,
+          format: selectedFormat
+        }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Conversion failed');
+      }
+
+      const data = await response.json();
+      convertedFileUrl = data.url; 
+
+      // Automatically download the file after conversion
+      const link = document.createElement('a');
+      link.href = convertedFileUrl;
+      link.download = `converted.${selectedFormat}`;
+      link.click();
+    } catch (error) {
+      errorMessage = error.message;
+    } finally {
+      isLoading = false;
+    }
   }
 </script>
 
-
 <MediaButton />
-
 <SideBar />
 
-
 <div class="card w-[50%] pr-10 pb-10 pt-10 ml-[30%] mt-[-10%]">
-  <div
-    class=" mt-0 ml-10"
-  >
-<FileDropzone 
-  name="files" 
-  accept=".docx, .pdf, .pptx, .xls, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/pdf, application/vnd.openxmlformats-officedocument.presentationml.presentation, application/vnd.ms-excel" 
-  on:change={transcode} 
-/>
-  <span style="color:aqua;">Select Format</span>
-
-  <select class="select w-[65%] mt-5 ml-5" on:change={handleFormatChange}>
-    <option value="" disabled selected>Select format</option>
-    <option value="docx">docx</option>
-    <option value="pdf">pdf</option>
-    <option value="pptx">pptx</option>
-    <option value="xls">xls</option>
-  </select>
-
-  
-
+  <div class="mt-0 ml-10">
+    <FileDropzone 
+      name="files" 
+      accept=".docx, .pdf, .pptx, .xls, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/pdf, application/vnd.openxmlformats-officedocument.presentationml.presentation, application/vnd.ms-excel" 
+      on:change={transcode} 
+    />
+    <span style="color:aqua;">Select Format</span>
+    <select id="Docx_formats" class="select w-[65%] mt-5 ml-5" on:change={handleFormatChange}>
+      <option value="" disabled selected>Select format</option>
+      <option value="docx">docx</option>
+      <option value="pdf">pdf</option>
+      <option value="pptx">pptx</option>
+      <option value="xls">xls</option>
+    </select>
+  </div>
+  <button type="button" on:click={convertAndDownloadFile} class="btn variant-filled-primary mt-5 ml-44 w-[50%]">
+    Convert and Download File
+  </button>
+  {#if errorMessage}
+    <p style="color: red;">{errorMessage}</p>
+  {/if}
   {#if isLoading}
     <p>Loading...</p>
   {/if}
 </div>
-<button type="button" on:click={downloadFile} class="btn variant-filled-primary mt-5 ml-44 w-[50%]">
-  Download File
-</button>
-</div>
+
+<style>
+  @media (max-width: 768px) {
+    .card {
+      width: 80%;
+      margin-top: 45px;
+    }
+
+    .select {
+      width: 100%;
+      font-size: 0.9rem;
+    }
+
+    .btn {
+      width: 100%;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .card {
+      width: 100%;
+      padding: 10px;
+    }
+
+    .select {
+      width: 100%;
+      font-size: 0.8rem;
+    }
+
+    .btn {
+      width: 80%;
+      font-size: 1rem;
+    }
+  }
+</style>

@@ -11,3 +11,13 @@
   </div>
 </div>
 
+<style>
+    @media (max-width: 768px) {
+
+   .h1 {
+      font-size: 16px;
+      padding-left: 85px;
+      margin-bottom: 5px;
+    }
+  }
+</style>

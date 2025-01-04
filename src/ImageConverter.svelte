@@ -97,7 +97,7 @@
 
   <span style="color:aqua;">Select Format</span>
 
-  <select class="select w-[65%] mt-5 ml-5" bind:value={$selectedFormat}>
+  <select id="Image_formats" class="select w-[65%] mt-5 ml-5" bind:value={$selectedFormat}>
     <option value="" disabled selected>Select format</option>
     <option value="png">PNG</option>
     <option value="jpeg">JPEG</option>
@@ -113,3 +113,39 @@ class="btn variant-filled-primary mt-5 ml-44 w-[50%]"
 on:click={() => downloadFile(convertedFile)}>Download Image</button
 >
 </div>
+
+
+<style>
+  @media (max-width: 768px) {
+  .card {
+    width: 80%;
+    margin-top: 45px;
+  }
+
+  .select {
+    width: 100%;
+    font-size: 0.9rem;
+  }
+
+  .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .card {
+    width: 100%;
+    padding: 10px;
+  }
+
+  .select {
+    width: 100%;
+    font-size: 0.8rem;
+  }
+
+  .btn {
+    width: 80%;
+    font-size: 1rem;
+  }
+}
+</style>

@@ -12,8 +12,7 @@ function closeWindow() {
     <li style="--i:5" data-icon="&#xf15b"><a href=".//../Docs">Document</a></li>
     <li style="--i:4" data-icon="&#xf001"><a href=".//../Audio">Audio</a></li>
     <li style="--i:3" data-icon="&#xf03d"><a href=".//../Video">Video</a></li>
-    <li style="--i:1" data-icon="&#xf2f5"><a href="javascript:void(0);" on:click={closeWindow}>Exit</a>
-    </li>
+    <li style="--i:1;" data-icon="&#xf064;"><a href="/" aria-label="Share">Share</a></li>
 </ul>
 </div>
 
@@ -40,7 +39,7 @@ function closeWindow() {
 
     li::before {
         font-family: "fontAwesome";
-        color: #fff;
+        color: #24afb2;
         display: flex;
         justify-content: center;
         align-items: center;
@@ -57,7 +56,7 @@ function closeWindow() {
     }
 
     li:hover::before {
-        background: #24afb2;
+        background: #b224a6;
     }
 
     li::after {

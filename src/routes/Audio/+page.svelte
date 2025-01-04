@@ -2,21 +2,22 @@
   import { FileDropzone } from "@skeletonlabs/skeleton";
   import MediaButton from "../../lib/components/MediaButton.svelte";
   import SideBar from "$lib/components/SideBar.svelte";
+  import * as FFmpeg from '@ffmpeg/ffmpeg';
 </script>
 
 <MediaButton />
 
 <SideBar />
 
-<div class="card w-[50%] pr-10 pb-10 pt-10 ml-[30%] mt-[-10%]">
-  <div
+<div class="card w-[50%] p-1 pr-10 pb-10 pt-10 ml-[30%] mt-[-10%]">
+<div
   class=" mt-0 ml-10"
 >
   <FileDropzone name="audios" accept="audio/*" on:change{transcode} />
 
   <span style="color:aqua;">Select Format</span>
 
-  <select class="select w-[65%] mt-5 ml-5">
+  <select id="Audio_formats" class="select w-[65%] mt-5 ml-5">
     <option value="" disabled selected>Select format</option>
     <option value="mp3">mp3</option>
     <option value="m4a">m4a</option>
