@@ -7,10 +7,11 @@
   let videoSrc: string | null = null;
   let isLoading = false;
   let errorMessage = "";
-  let videoFile: File | null = null; // Store the actual video file
+  let videoFile: File | null = null; 
 
-  const handleFileSelection = (event: CustomEvent) => {
-    const { files } = event.detail || {};
+  const handleFileSelection = (event: Event) => {
+    const customEvent = event as CustomEvent;
+    const { files } = customEvent.detail || {};
     if (!files || files.length === 0) {
       errorMessage = "No files selected.";
       videoSrc = null;
@@ -32,10 +33,9 @@
   };
 
   const convertVideo = async (file: File, format: string): Promise<Blob | null> => {
-    // Simulate a format conversion process
     return new Promise((resolve) => {
       setTimeout(() => {
-        resolve(new Blob([file], { type: `video/${format}` })); // Mock conversion
+        resolve(new Blob([file], { type: `video/${format}` })); 
       }, 3000);
     });
   };
@@ -75,10 +75,7 @@
 
 <div class="card w-[50%] pr-10 pb-10 pt-10 ml-[30%] mt-[-10%]">
   <div class="mt-0 ml-10">
-    <FileDropzone
-      name="videos"
-      accept="video/*"
-      on:change={handleFileSelection}
+    <FileDropzone name="videos" accept="video/*" on:change={handleFileSelection}
     />
     <span style="color:aqua;">Select Format</span>
     <select id="Video_formats" class="select w-[65%] mt-5 ml-5" bind:value={selectedFormat}>
