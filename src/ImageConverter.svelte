@@ -1,7 +1,6 @@
 <script lang="ts">
   import { FileDropzone } from "@skeletonlabs/skeleton";
-  import { onMount } from "svelte";
-  import { Writable, writable } from "svelte/store";
+  import { type  Writable, writable } from "svelte/store";
 
   function handleFileChange(e: Event): void {
     try {
