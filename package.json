@@ -49,6 +49,7 @@
 		"vite": "^5.0.11"
 	},
 	"dependencies": {
+		"@ffmpeg/core": "^0.12.8",
 		"@ffmpeg/ffmpeg": "^0.12.15",
 		"@fortawesome/fontawesome-free": "^6.7.2",
 		"@tailwindcss/forms": "^0.5.9",
