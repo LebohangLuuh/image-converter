@@ -75,13 +75,13 @@
 
 <MediaButton />
 
-<div class="pl-96 pr-44 ml-36 justify-center align-middle items-center display-flex w-[70%]">
-  <FileDropzonee
-    bind:this={fileDropzone}
-    id="file-dropzone"
-    name="files"
-    accept="audio/*"
-  />
+<SideBar />
+
+<div class="card w-[50%] p-1 pr-10 pb-10 pt-10 ml-[30%] mt-[-10%]">
+<div
+  class=" mt-0 ml-10"
+>
+  <FileDropzone name="audios" accept="audio/*" on:change{transcode} />
 
   <span style="color:aqua;">Select Format</span>
 
@@ -91,14 +91,9 @@
     <option value="m4a">m4a</option>
     <option value="wav">wav</option>
   </select>
-
-  <!-- Button to handle both conversion and download -->
-  <button
-    type="button"
-    class="btn variant-filled-primary ml-5 w-[25%]"
-    on:click={handleDownload}
+</div>
+<button type="button" class="btn variant-filled-primary mt-5 ml-44 w-[50%]"
+    >Download Audio</button
   >
-    Download Audio
-  </button>
 </div>
 
