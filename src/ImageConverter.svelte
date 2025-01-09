@@ -1,7 +1,7 @@
 <script lang="ts">
   import { FileDropzone } from "@skeletonlabs/skeleton";
   import { onMount } from "svelte";
-  import { writable } from "svelte/store";
+  import { Writable, writable } from "svelte/store";
 
   function handleFileChange(e: Event): void {
     try {
@@ -11,7 +11,7 @@
       }
 
       const validTypes = ["image/jpeg", "image/png"];
-      const maxSize = 5 * 1024 * 1024; // 5MB
+      const maxSize = 5 * 1024 * 1024; 
 
       for (const file of files) {
         if (!validTypes.includes(file.type)) {
@@ -34,7 +34,7 @@
   const selectedFormat = writable<string | null>(null);
   let convertedFile: File | null = null;
 
-  function convertImage(file: File): void {
+  function convertImage(file: File, selectedFormat: Writable<string | null>): void {
     selectedFormat.subscribe((format) => {
       if (!format) {
         console.error("No format selected");
