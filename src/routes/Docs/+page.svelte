@@ -1,66 +1,101 @@
-<script lang="ts">
+
+  <script lang="ts">
   import { FileDropzone } from '@skeletonlabs/skeleton';
   import MediaButton from '../../lib/components/MediaButton.svelte';
-  import { onMount } from 'svelte';
   import SideBar from '$lib/components/SideBar.svelte';
+  import * as mammoth from "mammoth";
+  import * as XLSX from 'xlsx';
 
-  let selectedFormat = '';
-  let convertedFileUrl = '';
+  let selectedFormat = ""; 
+  let uploadedFile: Blob | null = null; 
+  let errorMessage = "";
   let isLoading = false;
-  let errorMessage = '';
-  let file: File | null = null;
 
-  function handleFormatChange(event: Event) {
-    const target = event.target as HTMLSelectElement;
-    selectedFormat = target.value;
+  function handleFormatChange(event: { target: { value: string; }; }) {
+    selectedFormat = event.target.value;
+    console.log("Format Selected:", selectedFormat);
   }
 
-  async function transcode(event: CustomEvent) {
-    const files = event.detail.files;
-    if (files.length > 0) {
-      file = files[0];
+  async function transcode(event: { target: { files: (Blob | null)[]; }; }) {
+    try {
+      uploadedFile = event.target.files[0];
+      if (!uploadedFile) {
+        errorMessage = "Please select a file to convert.";
+        return;
+      }
+      errorMessage = "";
+      console.log("File Uploaded:", uploadedFile);
+    } catch (error) {
+      console.error("Error in transcode:", error);
+      errorMessage = "Failed to load file.";
     }
   }
 
   async function convertAndDownloadFile() {
-    if (!file || !selectedFormat) {
-      errorMessage = 'Please select a file and format.';
+    if (!uploadedFile || !selectedFormat) {
+      errorMessage = "Please upload a file and select a format.";
       return;
     }
 
-    isLoading = true;
-    errorMessage = '';
-
-    try {
-      
-      const response = await fetch('/api/convert', {
-        method: 'POST',
-        body: JSON.stringify({
-          fileName: file.name,
-          format: selectedFormat
-        }),
-        headers: {
-          'Content-Type': 'application/json'
+    const fileReader = new FileReader();
+    fileReader.onload = async (e) => {
+      const arrayBuffer = e.target.result;
+      isLoading = true;
+      try {
+        switch (selectedFormat) {
+          case "docx":
+            await handleDocxConversion(arrayBuffer);
+            break;
+          case "pdf":
+            await handlePdfConversion(arrayBuffer);
+            break;
+          case "pptx":
+            await handlePptxConversion(arrayBuffer);
+            break;
+          case "xls":
+            await handleXlsConversion(arrayBuffer);
+            break;
+          default:
+            errorMessage = "Unsupported format selected.";
         }
-      });
-
-      if (!response.ok) {
-        throw new Error('Conversion failed');
+      } catch (error) {
+        console.error("Conversion error:", error);
+        errorMessage = "File conversion failed.";
+      } finally {
+        isLoading = false;
       }
+    };
 
-      const data = await response.json();
-      convertedFileUrl = data.url; 
+    fileReader.readAsArrayBuffer(uploadedFile);
+  }
 
-      // Automatically download the file after conversion
-      const link = document.createElement('a');
-      link.href = convertedFileUrl;
-      link.download = `converted.${selectedFormat}`;
-      link.click();
-    } catch (error) {
-      errorMessage = error.message;
-    } finally {
-      isLoading = false;
-    }
+  async function handleDocxConversion(arrayBuffer: string | ArrayBuffer | null) {
+    const result = await mammoth.extractRawText({ arrayBuffer });
+    downloadFile(result.value, "converted.docx");
+  }
+
+  async function handlePdfConversion(arrayBuffer: string | ArrayBuffer | null) {
+    console.log("PDF conversion logic here.");
+    //conversion logic
+  }
+
+  async function handlePptxConversion(arrayBuffer: string | ArrayBuffer | null) {
+    console.log("PPTX conversion logic here.");
+    // PPTX conversion logic
+  }
+
+  async function handleXlsConversion(arrayBuffer: string | ArrayBuffer | null) {
+    const workbook = XLSX.read(arrayBuffer, { type: "array" });
+    const xlsData = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    downloadFile(xlsData, "converted.xlsx");
+  }
+
+  function downloadFile(data: BlobPart, fileName: string) {
+    const blob = new Blob([data]);
+    const link = document.createElement("a");
+    link.href = window.URL.createObjectURL(blob);
+    link.download = fileName;
+    link.click();
   }
 </script>
 
