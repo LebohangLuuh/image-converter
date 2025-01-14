@@ -8,7 +8,6 @@
 
   let selectedFormat = ""; 
   let uploadedFile: Blob | null = null; 
-  let errorMessage = "";
   let isLoading = false;
 
   function handleFormatChange(event: Event & { currentTarget: HTMLSelectElement }) {
@@ -21,20 +20,19 @@
       const input = event.target as HTMLInputElement;
       uploadedFile = input.files ? input.files[0] : null;
       if (!uploadedFile) {
-        errorMessage = "Please select a file to convert.";
+        alert("Please select a file to convert.");
         return;
       }
-      errorMessage = "";
       console.log("File Uploaded:", uploadedFile);
     } catch (error) {
       console.error("Error in transcode:", error);
-      errorMessage = "Failed to load file.";
+      alert("Failed to load file.");
     }
   }
 
   async function convertAndDownloadFile() {
     if (!uploadedFile || !selectedFormat) {
-      errorMessage = "Please upload a file and select a format.";
+      alert("Please upload a file and select a format.");
       return;
     }
 
@@ -58,14 +56,14 @@
               await handleXlsConversion(arrayBuffer);
               break;
             default:
-              errorMessage = "Unsupported format selected.";
+              alert("Unsupported format selected.");
           }
         } else {
-          errorMessage = "Failed to read file.";
+          alert("Failed to read file.");
         }
       } catch (error) {
         console.error("Conversion error:", error);
-        errorMessage = "File conversion failed.";
+        alert("File conversion failed.");
       } finally {
         isLoading = false;
       }
@@ -117,8 +115,8 @@
     <FileDropzone 
       name="files" 
       accept=".docx, .pdf, .pptx, .xls, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/pdf, application/vnd.openxmlformats-officedocument.presentationml.presentation, application/vnd.ms-excel" 
-      on:change={transcode} 
-    />
+      on:change={transcode} />
+
     <span style="color:aqua;">Select Format</span>
     <select id="Docx_formats" class="select w-[65%] mt-5 ml-5" on:change={handleFormatChange}>
       <option value="" disabled selected>Select format</option>
@@ -131,12 +129,7 @@
   <button type="button" on:click={convertAndDownloadFile} class="btn variant-filled-primary mt-5 ml-44 w-[50%]">
     Convert and Download File
   </button>
-  {#if errorMessage}
-    <p style="color: red;">{errorMessage}</p>
-  {/if}
-  {#if isLoading}
-    <p>Loading...</p>
-  {/if}
+
 </div>
 
 <style>
