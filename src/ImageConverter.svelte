@@ -109,8 +109,7 @@
 <button
 type="button"
 class="btn variant-filled-primary mt-5 ml-44 w-[50%]"
-on:click={() => downloadFile(convertedFile)}>Download Image</button
->
+on:click={() => { if (convertedFile) downloadFile(convertedFile); }}>Download Image</button>
 </div>
 
 

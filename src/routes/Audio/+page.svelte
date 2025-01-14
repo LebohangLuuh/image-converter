@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { onMount } from "svelte";
   import MediaButton from "../../lib/components/MediaButton.svelte";
   import { FileDropzone } from "@skeletonlabs/skeleton";
@@ -6,11 +6,11 @@
 
   const FileDropzonee = FileDropzone;
 
-  let fileDropzone;
+  let fileDropzone: FileDropzone;
   let selectedFormat = "";
-  let transcodedAudioUrl = null;
+  let transcodedAudioUrl: string | null = null;
 
-  let ffmpeg;
+  let ffmpeg: any;
 
   // Load ffmpeg.wasm when component mounts
   onMount(async () => {
@@ -20,7 +20,7 @@
   });
 
   // Function to transcode the audio file
-  const transcode = async (file) => {
+  const transcode = async (file: File) => {
     const outputExtension = selectedFormat;
 
     if (!outputExtension) {
@@ -52,7 +52,7 @@
     }
   };
 
-  // Handle file input and start conversion and download in one go
+  //  conversion and download 
   const handleDownload = async () => {
     if (!fileDropzone.files || fileDropzone.files.length === 0) {
       alert("Please select an audio file.");
@@ -89,7 +89,7 @@
 
   <span style="color:aqua;">Select Format</span>
 
-  <select class="select w-[45%] mt-5 ml-5" bind:value={selectedFormat}>
+  <select class="select w-[65%] mt-5 ml-5" bind:value={selectedFormat}>
     <option value="">Select format</option>
     <option value="mp3">mp3</option>
     <option value="m4a">m4a</option>

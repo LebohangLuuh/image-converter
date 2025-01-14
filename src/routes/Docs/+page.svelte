@@ -11,14 +11,15 @@
   let errorMessage = "";
   let isLoading = false;
 
-  function handleFormatChange(event: { target: { value: string; }; }) {
-    selectedFormat = event.target.value;
-    console.log("Format Selected:", selectedFormat);
+  function handleFormatChange(event: Event & { currentTarget: HTMLSelectElement }) {
+      selectedFormat = event.currentTarget.value;
+      console.log("Format Selected:", selectedFormat);
   }
 
-  async function transcode(event: { target: { files: (Blob | null)[]; }; }) {
+  async function transcode(event: Event) {
     try {
-      uploadedFile = event.target.files[0];
+      const input = event.target as HTMLInputElement;
+      uploadedFile = input.files ? input.files[0] : null;
       if (!uploadedFile) {
         errorMessage = "Please select a file to convert.";
         return;
@@ -39,24 +40,28 @@
 
     const fileReader = new FileReader();
     fileReader.onload = async (e) => {
-      const arrayBuffer = e.target.result;
+      const arrayBuffer = e.target?.result;
       isLoading = true;
       try {
-        switch (selectedFormat) {
-          case "docx":
-            await handleDocxConversion(arrayBuffer);
-            break;
-          case "pdf":
-            await handlePdfConversion(arrayBuffer);
-            break;
-          case "pptx":
-            await handlePptxConversion(arrayBuffer);
-            break;
-          case "xls":
-            await handleXlsConversion(arrayBuffer);
-            break;
-          default:
-            errorMessage = "Unsupported format selected.";
+        if (arrayBuffer) {
+          switch (selectedFormat) {
+            case "docx":
+              await handleDocxConversion(arrayBuffer);
+              break;
+            case "pdf":
+              await handlePdfConversion(arrayBuffer);
+              break;
+            case "pptx":
+              await handlePptxConversion(arrayBuffer);
+              break;
+            case "xls":
+              await handleXlsConversion(arrayBuffer);
+              break;
+            default:
+              errorMessage = "Unsupported format selected.";
+          }
+        } else {
+          errorMessage = "Failed to read file.";
         }
       } catch (error) {
         console.error("Conversion error:", error);
@@ -70,6 +75,11 @@
   }
 
   async function handleDocxConversion(arrayBuffer: string | ArrayBuffer | null) {
+    if (arrayBuffer instanceof ArrayBuffer) {
+      const result = await mammoth.extractRawText({ arrayBuffer });
+    } else {
+      throw new Error("Invalid arrayBuffer type");
+    }
     const result = await mammoth.extractRawText({ arrayBuffer });
     downloadFile(result.value, "converted.docx");
   }
