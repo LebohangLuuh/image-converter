@@ -1,10 +1,12 @@
-
-  <script lang="ts">
+<script lang="ts">
   import { FileDropzone } from '@skeletonlabs/skeleton';
   import MediaButton from '../../lib/components/MediaButton.svelte';
   import SideBar from '$lib/components/SideBar.svelte';
   import * as mammoth from "mammoth";
   import * as XLSX from 'xlsx';
+  import { PDFDocument } from 'pdf-lib';
+  import { downloadFile } from '../utils.js'; 
+  import PptxGenJS from "pptxgenjs";
 
   let selectedFormat = ""; 
   let uploadedFile: Blob | null = null; 
@@ -44,16 +46,16 @@
         if (arrayBuffer) {
           switch (selectedFormat) {
             case "docx":
-              await handleDocxConversion(arrayBuffer);
+              await handleDocxConversion(arrayBuffer, selectedFormat);
               break;
             case "pdf":
               await handlePdfConversion(arrayBuffer);
               break;
             case "pptx":
-              await handlePptxConversion(arrayBuffer);
+              await handlePptxConversion(arrayBuffer as ArrayBuffer, "converted.pptx");
               break;
             case "xls":
-              await handleXlsConversion(arrayBuffer);
+              await handleXlsConversion(arrayBuffer as ArrayBuffer);
               break;
             default:
               alert("Unsupported format selected.");
@@ -72,38 +74,69 @@
     fileReader.readAsArrayBuffer(uploadedFile);
   }
 
-  async function handleDocxConversion(arrayBuffer: string | ArrayBuffer | null) {
-    if (arrayBuffer instanceof ArrayBuffer) {
-      const result = await mammoth.extractRawText({ arrayBuffer });
-    } else {
-      throw new Error("Invalid arrayBuffer type");
+  async function handleDocxConversion(arrayBuffer: string | ArrayBuffer | null, fileType: string) {
+    try {
+      if (fileType === 'docx' && arrayBuffer instanceof ArrayBuffer) {
+        const result = await mammoth.extractRawText({ arrayBuffer });
+        downloadFile(result.value, "converted.docx");
+      } else if (fileType === 'pdf' && arrayBuffer instanceof ArrayBuffer) {
+        const pdfDoc = await PDFDocument.load(arrayBuffer);
+        const textContent = await extractTextFromPDF(pdfDoc);
+        const docxContent = convertTextToDocx(textContent);
+        downloadFile(docxContent, "converted.docx");
+      } else {
+        throw new Error("Invalid input type or file type");
+      }
+    } catch (error) {
+      console.error("Error during DOCX conversion:", error);
+      alert("Failed to convert DOCX file. Please ensure the file is valid.");
     }
-    const result = await mammoth.extractRawText({ arrayBuffer });
-    downloadFile(result.value, "converted.docx");
+  }
+
+  async function extractTextFromPDF(pdfDoc: PDFDocument): Promise<string> {
+    const pages = pdfDoc.getPages();
+    let textContent = '';
+    for (const page of pages) {
+      const text = await page.getText();
+      textContent += text;
+    }
+    return textContent;
+  }
+
+  function convertTextToDocx(text: string): string {
+    return text;
   }
 
   async function handlePdfConversion(arrayBuffer: string | ArrayBuffer | null) {
     console.log("PDF conversion logic here.");
-    //conversion logic
   }
 
-  async function handlePptxConversion(arrayBuffer: string | ArrayBuffer | null) {
-    console.log("PPTX conversion logic here.");
-    // PPTX conversion logic
-  }
-
-  async function handleXlsConversion(arrayBuffer: string | ArrayBuffer | null) {
+  async function handleXlsConversion(arrayBuffer: ArrayBuffer) {
     const workbook = XLSX.read(arrayBuffer, { type: "array" });
     const xlsData = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
     downloadFile(xlsData, "converted.xlsx");
   }
 
-  function downloadFile(data: BlobPart, fileName: string) {
-    const blob = new Blob([data]);
-    const link = document.createElement("a");
-    link.href = window.URL.createObjectURL(blob);
-    link.download = fileName;
-    link.click();
+  async function handlePptxConversion(arrayBuffer: ArrayBuffer, pptxFilePath: string) {
+    try {
+      const result = await mammoth.extractRawText({ arrayBuffer });
+      const paragraphs = result.value.split("\n");
+
+      const pptx = new PptxGenJS();
+
+      paragraphs.forEach((paragraph, index) => {
+        if (paragraph.trim()) {
+          const slide = pptx.addSlide();
+          slide.addText(paragraph, { x: 1, y: 1, fontSize: 18 });
+        }
+      });
+
+      pptx.writeFile({ fileName: pptxFilePath });
+      console.log(`PPTX file created at: ${pptxFilePath}`);
+    } catch (error) {
+      console.error("Error converting DOCX to PPTX:", error);
+      alert("Failed to convert DOCX to PPTX. Please ensure the file is valid.");
+    }
   }
 </script>
 
@@ -129,7 +162,6 @@
   <button type="button" on:click={convertAndDownloadFile} class="btn variant-filled-primary mt-5 ml-44 w-[50%]">
     Convert and Download File
   </button>
-
 </div>
 
 <style>
