@@ -4,183 +4,162 @@
   import { FileDropzone } from "@skeletonlabs/skeleton";
   import SideBar from "$lib/components/SideBar.svelte";
   import { FFmpeg } from '@ffmpeg/ffmpeg';
-  import { toBlobURL, fetchFile } from '@ffmpeg/util';
+  import { saveAs } from 'file-saver';
 
-  const FileDropzonee = FileDropzone;
+  type SupportedFormat = 'mp3' | 'm4a' | 'wav';
+
+  const SUPPORTED_FORMATS: Record<SupportedFormat, { codec: string; mimeType: string }> = {
+    mp3: { codec: 'libmp3lame', mimeType: 'audio/mpeg' },
+    m4a: { codec: 'aac', mimeType: 'audio/x-m4a' },
+    wav: { codec: 'pcm_s16le', mimeType: 'audio/wav' },
+  };
 
   let fileDropzone: FileDropzone;
-  let selectedFormat = "";
+
+  onMount(() => {
+    fileDropzone = new FileDropzone({ target: document.body });
+  });
+  let selectedFormat: SupportedFormat | '' = '';
+  let ffmpeg: FFmpeg | null = null;
   let transcodedAudioUrl: string | null = null;
   let isConverting = false;
   let progress = 0;
-  let ffmpeg: FFmpeg;
 
-  // Load ffmpeg.wasm 
-  onMount(async () => {
+  async function initFFmpeg(): Promise<void> {
     ffmpeg = new FFmpeg();
-    
+    await ffmpeg.load();
     ffmpeg.on('progress', ({ progress: p }) => {
       progress = Math.round(p * 100);
     });
+  }
 
-    try {
-      // Load ffmpeg 
-      await ffmpeg.load({
-        coreURL: await toBlobURL(`/ffmpeg-core.js`, 'text/javascript'),
-        wasmURL: await toBlobURL(`/ffmpeg-core.wasm`, 'application/wasm'),
-      });
-    } catch (error) {
-      console.error('Failed to load FFmpeg:', error);
-      alert('Failed to initialize audio converter. Please try reloading the page.');
+  function validateFile(file: File): void {
+    const fileExtension = file.name.split('.').pop()?.toLowerCase();
+    if (!fileExtension || !(fileExtension in SUPPORTED_FORMATS)) {
+      throw new Error(`Unsupported file format: .${fileExtension}`);
     }
-  });
-
-  onDestroy(() => {
-    if (transcodedAudioUrl) {
-      URL.revokeObjectURL(transcodedAudioUrl);
-    }
-  });
-
-  // transcode the audio file
-  const transcode = async (file: File): Promise<string | null> => {
-    if (!ffmpeg.loaded) {
-      throw new Error('FFmpeg is not loaded');
-    }
-
-    const outputExtension = selectedFormat;
-    if (!outputExtension) {
-      throw new Error('Please select a format for conversion');
-    }
-
-    try {
-      isConverting = true;
-      progress = 0;
-
-      const timestamp = Date.now();
-      const inputFileName = `input_${timestamp}${file.name}`;
-      const outputFileName = `output_${timestamp}.${outputExtension}`;
-
-      await ffmpeg.writeFile(inputFileName, await fetchFile(file));
-
-      //  FFmpeg command to convert the file
-      await ffmpeg.exec([
-        '-i', inputFileName,
-        '-c:a', getAudioCodec(outputExtension),
-        outputFileName
-      ]);
-
-      const outputData = await ffmpeg.readFile(outputFileName);
-      const blob = new Blob([outputData], { type: `audio/${outputExtension}` });
-
-      await ffmpeg.deleteFile(inputFileName);
-      await ffmpeg.deleteFile(outputFileName);
-
-      return URL.createObjectURL(blob);
-    } catch (error) {
-      console.error('Transcoding error:', error);
-      throw error;
-    } finally {
-      isConverting = false;
-    }
-  };
-
-  function getAudioCodec(format: string): string {
-    switch (format) {
-      case 'mp3':
-        return 'libmp3lame';
-      case 'm4a':
-        return 'aac';
-      case 'wav':
-        return 'pcm_s16le';
-      default:
-        return 'copy';
+    if (file.size > 100 * 1024 * 1024) {
+      throw new Error('File size too large. Please select a file under 100MB.');
     }
   }
 
-  const handleDownload = async () => {
+  async function transcode(file: File): Promise<string> {
+    if (!ffmpeg || !ffmpeg.loaded) throw new Error('FFmpeg not initialized.');
+    if (!selectedFormat) throw new Error('Please select a format.');
+
+    const inputName = `input.${file.name.split('.').pop()}`;
+    const outputName = `output.${selectedFormat}`;
+
+    await ffmpeg.writeFile(inputName, new Uint8Array(await file.arrayBuffer()));
+    await ffmpeg.exec(['-i', inputName, '-c:a', SUPPORTED_FORMATS[selectedFormat].codec, '-y', outputName]);
+
+    const outputFile = await ffmpeg.readFile(outputName);
+    return URL.createObjectURL(new Blob([outputFile], { type: SUPPORTED_FORMATS[selectedFormat].mimeType }));
+  }
+
+  async function handleDownload(): Promise<void> {
     if (!fileDropzone.files || fileDropzone.files.length === 0) {
       alert('Please select an audio file.');
       return;
     }
 
     try {
-      if (transcodedAudioUrl) {
-        URL.revokeObjectURL(transcodedAudioUrl);
-        transcodedAudioUrl = null;
-      }
-
       const file = fileDropzone.files[0];
+      validateFile(file);
+
+      if (transcodedAudioUrl) URL.revokeObjectURL(transcodedAudioUrl);
+      isConverting = true;
       transcodedAudioUrl = await transcode(file);
 
-      if (transcodedAudioUrl) {
-        const link = document.createElement('a');
-        link.href = transcodedAudioUrl;
-        link.download = `converted_${file.name.split('.')[0]}.${selectedFormat}`;
-        link.click();
-      }
+      saveAs(transcodedAudioUrl, `converted.${selectedFormat}`);
+      alert('Conversion successful!');
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'An error occurred during conversion');
+      alert((error as Error).message || 'An unexpected error occurred.');
+    } finally {
+      isConverting = false;
     }
-  };
+  }
+
+  onMount(initFFmpeg);
+  onDestroy(() => {
+    if (transcodedAudioUrl) URL.revokeObjectURL(transcodedAudioUrl);
+  });
 </script>
 
-<MediaButton />
+  <MediaButton />
+  <SideBar />
 
-<SideBar />
+  <div class="audio-converter-container">
+    <div class="dropzone-container">
+      <FileDropzone
+        bind:this={fileDropzone}
+        id="file-dropzone"
+        name="files"
+        accept="audio/*"
+      />
 
-<div class="card w-[50%] pr-10 pb-10 pt-10 ml-[30%] mt-[-10%]">
-  <div class="mt-0 ml-10">
-    <FileDropzonee
-      bind:this={fileDropzone}
-      id="file-dropzone"
-      name="files"
-      accept="audio/*"
-    />
-
-    <span style="color:aqua;">Select Format</span>
-
-    <select 
-      class="select w-[65%] mt-5 ml-5" 
-      bind:value={selectedFormat}
-      disabled={isConverting}
-    >
-      <option value="">Select format</option>
-      <option value="mp3">mp3</option>
-      <option value="m4a">m4a</option>
-      <option value="wav">wav</option>
-    </select>
-  </div>
-
-  {#if isConverting}
-    <div class="progress-bar mt-5 ml-44 w-[50%]">
-      <div class="progress" style="width: {progress}%">
-        Converting: {progress}%
+      <div class="format-selector">
+        <label for="format-select" class="format-label">Select Format</label>
+        <select id="format-select" class="select w-[65%]" bind:value={selectedFormat} disabled={isConverting}>
+          <option value="">Select format</option>
+          {#each Object.keys(SUPPORTED_FORMATS) as format}
+            <option value={format}>{format.toUpperCase()}</option>
+          {/each}
+        </select>
       </div>
     </div>
-  {/if}
 
-  <button
-    type="button"
-    class="btn variant-filled-primary mt-5 ml-44 w-[50%]"
-    on:click={handleDownload}
-    disabled={isConverting || !selectedFormat}
-  >
-    {isConverting ? 'Converting...' : 'Download Audio'}
-  </button>
-</div>
+    {#if isConverting}
+      <div class="progress-bar" role="progressbar" aria-valuenow={progress} aria-valuemin="0" aria-valuemax="100">
+        <div class="progress" style="width: {progress}%">
+          Converting: {progress}%
+        </div>
+      </div>
+    {/if}
+
+    <button
+      type="button"
+      class="btn variant-filled-primary convert-button"
+      on:click={handleDownload}
+      disabled={isConverting || !selectedFormat}
+    >
+      {isConverting ? 'Converting...' : 'Download Audio'}
+    </button>
+  </div>
 
 <style>
+  .audio-converter-container {
+    width: 50%;
+    padding: 2.5rem;
+    margin-left: 30%;
+    margin-top: -10%;
+  }
+
+  .dropzone-container {
+    margin: 0 0 1.25rem 2.5rem;
+  }
+
+  .format-selector {
+    margin-top: 1.25rem;
+  }
+
+  .format-label {
+    color: var(--color-primary-500);
+    margin-right: 1.25rem;
+  }
+
   .progress-bar {
-    width: 100%;
+    width: 50%;
     height: 20px;
     background-color: #ddd;
     border-radius: 10px;
     overflow: hidden;
+    margin: 1.25rem auto;
   }
 
   .progress {
     height: 100%;
-    background-color: #4CAF50;
+    background-color: var(--color-success-500);
     transition: width 0.3s ease-in-out;
     display: flex;
     align-items: center;
@@ -188,4 +167,11 @@
     color: white;
     font-size: 12px;
   }
+
+  .convert-button {
+    width: 50%;
+    margin: 1.25rem auto;
+    display: block;
+  }
+
 </style>

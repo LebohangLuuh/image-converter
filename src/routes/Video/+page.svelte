@@ -1,145 +1,170 @@
+
 <script lang="ts">
-  import SideBar from "$lib/components/SideBar.svelte";
-  import MediaButton from "../../lib/components/MediaButton.svelte";
-  import { FileDropzone } from "@skeletonlabs/skeleton";
+  import { onMount } from 'svelte';
+  import { FFmpeg } from '@ffmpeg/ffmpeg';
+  import { fetchFile } from '@ffmpeg/util';
+  import MediaButton from '$lib/components/MediaButton.svelte';
+  import SideBar from '$lib/components/SideBar.svelte';
 
-  let selectedFormat = "";
-  let videoSrc: string | null = null;
+  let ffmpeg: FFmpeg;
   let isLoading = false;
-  let errorMessage = "";
-  let videoFile: File | null = null; 
+  let progress = 0;
+  let selectedFile: File | null = null;
+  let selectedFormat = '';
+  let error = '';
 
-  const handleFileSelection = (event: Event) => {
-    const customEvent = event as CustomEvent;
-    const { files } = customEvent.detail || {};
-    if (!files || files.length === 0) {
-      errorMessage = "No files selected.";
-      videoSrc = null;
-      videoFile = null;
-      return;
-    }
-
-    const file = files[0];
-    if (!file.type.startsWith("video/")) {
-      errorMessage = "Selected file is not a video.";
-      videoSrc = null;
-      videoFile = null;
-      return;
-    }
-
-    errorMessage = "";
-    videoFile = file;
-    videoSrc = URL.createObjectURL(file);
-  };
-
-  const convertVideo = async (file: File, format: string): Promise<Blob | null> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(new Blob([file], { type: `video/${format}` })); 
-      }, 3000);
-    });
-  };
-
-  const downloadVideo = async () => {
-    if (!videoFile || !selectedFormat) {
-      errorMessage = "Please select a video file and a format.";
-      return;
-    }
-
-    isLoading = true;
+  onMount(async () => {
     try {
-      const convertedBlob = await convertVideo(videoFile, selectedFormat);
+      ffmpeg = new FFmpeg();
+      ffmpeg.on('progress', ({ progress: p }) => {
+        progress = Math.round(p * 100);
+      });
+      
+      await ffmpeg.load();
+    } catch (err) {
+      console.error('FFmpeg failed to load:', err);
+    }
+  });
 
-      if (convertedBlob) {
-        const downloadUrl = URL.createObjectURL(convertedBlob);
-        const a = document.createElement("a");
-        const originalName = videoFile.name.split(".")[0];
-        a.href = downloadUrl;
-        a.download = `${originalName}.${selectedFormat}`;
-        a.click();
-        URL.revokeObjectURL(downloadUrl);
-      } else {
-        errorMessage = "Failed to convert video.";
+  function handleDrop(event: DragEvent) {
+    event.preventDefault();
+    if (event.dataTransfer?.files) {
+      const file = event.dataTransfer.files[0];
+      if (file?.type.startsWith('video/')) {
+        selectedFile = file;
       }
-    } catch (error) {
-      errorMessage = "An error occurred during video conversion.";
-      console.error("Error during video conversion:", error);
+    }
+  }
+
+  function handleFileSelection(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files?.length) {
+      selectedFile = input.files[0];
+    }
+  }
+
+  async function convertVideo() {
+    if (!selectedFile || !selectedFormat) return;
+
+    try {
+      error = '';
+      isLoading = true;
+      progress = 0;
+
+      const inputFileName = 'input' + getExtension(selectedFile.name);
+      const outputFileName = `output.${selectedFormat}`;
+
+      // Write the file to memory
+      await ffmpeg.writeFile(inputFileName, await fetchFile(selectedFile));
+
+      // Run the FFmpeg command
+      await ffmpeg.exec([
+        '-i', inputFileName,
+        outputFileName
+      ]);
+
+      // Read the output file
+      const data = await ffmpeg.readFile(outputFileName);
+      const blob = new Blob([data], { type: `video/${selectedFormat}` });
+      
+      // Create download link
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `converted-video.${selectedFormat}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+    } catch (err) {
+      console.error('Conversion error:', err);
+      error = 'Failed to convert video. Please try again.';
     } finally {
       isLoading = false;
     }
-  };
+  }
+
+  function getExtension(filename: string): string {
+    return '.' + filename.split('.').pop();
+  }
 </script>
 
 <MediaButton />
 <SideBar />
 
-<div class="card w-[50%] pr-10 pb-10 pt-10 ml-[30%] mt-[-10%]">
-  <div class="mt-0 ml-10">
-    <FileDropzone name="videos" accept="video/*" on:change={handleFileSelection}
-    />
-    <span style="color:aqua;">Select Format</span>
-    <select id="Video_formats" class="select w-[65%] mt-5 ml-5" bind:value={selectedFormat}>
-      <option value="" disabled selected>Select format</option>
-      <option value="webm">webm</option>
-      <option value="mp4">mp4</option>
-      <option value="avi">avi</option>
-    </select>
+  <div class="card w-[50%] pr-10 pb-10 pt-10 ml-[30%] mt-[-10%]">
+    <div class="mt-0 ml-10">
+      <div 
+        class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-500"
+        on:click={() => {
+          const fileInput = document.getElementById('fileInput');
+          if (fileInput) fileInput.click();
+        }}
+        on:keydown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            const fileInput = document.getElementById('fileInput');
+            if (fileInput) fileInput.click();
+          }
+        }}
+        on:dragover|preventDefault
+        on:drop|preventDefault={handleDrop}
+        role="button"
+        tabindex="0"
+        aria-label="File input"
+      >
+        <input
+          type="file"
+          id="fileInput"
+          accept="video/*"
+          class="hidden"
+          on:change={handleFileSelection}
+        />
+        {#if selectedFile}
+          <p class="text-green-600">Selected: {selectedFile.name}</p>
+        {:else}
+          <p>Drag and drop a video file here or click to select</p>
+        {/if}
+      </div>
+
+      <div class="mt-4">
+        <span class="text-cyan-400">Select Format</span>
+        <select 
+          id="Video_formats" 
+          class="select w-[65%] mt-5 ml-5" 
+          bind:value={selectedFormat}
+        >
+          <option value="" disabled selected>Select format</option>
+          <option value="webm">webm</option>
+          <option value="mp4">mp4</option>
+          <option value="avi">avi</option>
+        </select>
+      </div>
+    </div>
+
+    <button
+      type="button"
+      class="btn variant-filled-primary mt-5 ml-44 w-[50%]"
+      on:click={convertVideo}
+      disabled={isLoading || !selectedFormat || !selectedFile}
+    >
+      {#if isLoading}
+        Converting... {progress}%
+      {:else}
+        Convert Video
+      {/if}
+    </button>
+
+    {#if error}
+      <div class="mt-4 p-4 bg-red-100 text-red-800 rounded">
+        {error}
+      </div>
+    {/if}
   </div>
 
-  {#if isLoading}
-    <p>Loading...</p>
-  {/if}
-
-  {#if errorMessage}
-    <p class="error">{errorMessage}</p>
-  {/if}
-
-  <button
-    type="button"
-    class="btn variant-filled-primary mt-5 ml-44 w-[50%]"
-    on:click={downloadVideo}
-    disabled={isLoading || !selectedFormat}
-  >
-    Download Video
-  </button>
-</div>
-
 <style>
-  .error {
-    color: red;
-    font-size: 1rem;
-  }
-
-  @media (max-width: 768px) {
-    .card {
-      width: 80%;
-      margin-top: 45px;
-    }
-
-    .select {
-      width: 100%;
-      font-size: 0.9rem;
-    }
-
-    .btn {
-      width: 100%;
-    }
-  }
-
-  @media (max-width: 480px) {
-    .card {
-      width: 100%;
-      padding: 10px;
-    }
-
-    .select {
-      width: 100%;
-      font-size: 0.8rem;
-    }
-
-    .btn {
-      width: 80%;
-      font-size: 1rem;
-    }
+  :global(body) {
+    background-color: #1a1a1a;
+    color: #ffffff;
   }
 </style>
