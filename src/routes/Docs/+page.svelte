@@ -97,8 +97,8 @@
     const pages = pdfDoc.getPages();
     let textContent = '';
     for (const page of pages) {
-      const text = await page.getText();
-      textContent += text;
+      const textContentStream = await page.getTextContent();
+      textContent += textContentStream.items.map((item: any) => (item as any).str).join(' ');
     }
     return textContent;
   }
@@ -122,7 +122,7 @@
       const result = await mammoth.extractRawText({ arrayBuffer });
       const paragraphs = result.value.split("\n");
 
-      const pptx = new PptxGenJS();
+      const pptx = new PptxGenJS.default();
 
       paragraphs.forEach((paragraph, index) => {
         if (paragraph.trim()) {

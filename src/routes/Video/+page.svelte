@@ -40,17 +40,23 @@
     const input = event.target as HTMLInputElement;
     if (input.files?.length) {
       selectedFile = input.files[0];
+      console.log('Selected file:', selectedFile.name); 
+
     }
   }
 
   async function convertVideo() {
     if (!selectedFile || !selectedFormat) return;
 
+    console.log('Selected format:', selectedFormat);
+
+
     try {
       error = '';
       isLoading = true;
       progress = 0;
 
+      console.log('Converting video : ', selectedFile.name , 'to format: ', selectedFormat, 'progress: ', progress);
       const inputFileName = 'input' + getExtension(selectedFile.name);
       const outputFileName = `output.${selectedFormat}`;
 
@@ -121,7 +127,7 @@
           on:change={handleFileSelection}
         />
         {#if selectedFile}
-          <p class="text-green-600">Selected: {selectedFile.name}</p>
+          <p class="text-primary-500">Selected: {selectedFile.name}</p>
         {:else}
           <p>Drag and drop a video file here or click to select</p>
         {/if}

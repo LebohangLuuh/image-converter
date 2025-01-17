@@ -89,8 +89,8 @@
   <MediaButton />
   <SideBar />
 
-  <div class="audio-converter-container">
-    <div class="dropzone-container">
+  <div class="card w-[50%] pr-10 pb-2 pt-5 ml-[30%] mt-[-12%]">
+    <div class=" mt-0 ml-10">
       <FileDropzone
         bind:this={fileDropzone}
         id="file-dropzone"
@@ -128,16 +128,6 @@
   </div>
 
 <style>
-  .audio-converter-container {
-    width: 50%;
-    padding: 2.5rem;
-    margin-left: 30%;
-    margin-top: -10%;
-  }
-
-  .dropzone-container {
-    margin: 0 0 1.25rem 2.5rem;
-  }
 
   .format-selector {
     margin-top: 1.25rem;
