@@ -1,4 +1,3 @@
-
 <script lang="ts">
   import { onMount } from 'svelte';
   import { FFmpeg } from '@ffmpeg/ffmpeg';
@@ -135,11 +134,7 @@
 
       <div class="mt-4">
         <span class="text-cyan-400">Select Format</span>
-        <select 
-          id="Video_formats" 
-          class="select w-[65%] mt-5 ml-5" 
-          bind:value={selectedFormat}
-        >
+        <select id="Video_formats" class="select w-[65%] mt-5 ml-5" bind:value={selectedFormat}>
           <option value="" disabled selected>Select format</option>
           <option value="webm">webm</option>
           <option value="mp4">mp4</option>

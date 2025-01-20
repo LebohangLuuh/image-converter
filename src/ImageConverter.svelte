@@ -91,9 +91,7 @@
   <div
     class=" mt-0 ml-10"
   >
-  <FileDropzone name="images" accept="image/*" on:change={handleFileChange}>
-  </FileDropzone>
-
+  <FileDropzone name="images" accept="image/*" on:change={handleFileChange} class="flex justify-start space-x-72"/>
   <span style="color:aqua;">Select Format</span>
 
   <select id="Image_formats" class="select w-[65%] mt-5 ml-5" bind:value={$selectedFormat}>

@@ -1,20 +1,22 @@
 <script lang="ts">
-  import { FileDropzone } from '@skeletonlabs/skeleton';
-  import MediaButton from '../../lib/components/MediaButton.svelte';
-  import SideBar from '$lib/components/SideBar.svelte';
+  import { FileDropzone } from "@skeletonlabs/skeleton";
+  import MediaButton from "../../lib/components/MediaButton.svelte";
+  import SideBar from "$lib/components/SideBar.svelte";
   import * as mammoth from "mammoth";
-  import * as XLSX from 'xlsx';
-  import { PDFDocument } from 'pdf-lib';
-  import { downloadFile } from '../utils.js'; 
+  import * as XLSX from "xlsx";
+  import { PDFDocument } from "pdf-lib";
+  import { downloadFile } from "../utils.js";
   import PptxGenJS from "pptxgenjs";
 
-  let selectedFormat = ""; 
-  let uploadedFile: Blob | null = null; 
+  let selectedFormat = "";
+  let uploadedFile: Blob | null = null;
   let isLoading = false;
 
-  function handleFormatChange(event: Event & { currentTarget: HTMLSelectElement }) {
-      selectedFormat = event.currentTarget.value;
-      console.log("Format Selected:", selectedFormat);
+  function handleFormatChange(
+    event: Event & { currentTarget: HTMLSelectElement }
+  ) {
+    selectedFormat = event.currentTarget.value;
+    console.log("Format Selected:", selectedFormat);
   }
 
   async function transcode(event: Event) {
@@ -52,7 +54,10 @@
               await handlePdfConversion(arrayBuffer);
               break;
             case "pptx":
-              await handlePptxConversion(arrayBuffer as ArrayBuffer, "converted.pptx");
+              await handlePptxConversion(
+                arrayBuffer as ArrayBuffer,
+                "converted.pptx"
+              );
               break;
             case "xls":
               await handleXlsConversion(arrayBuffer as ArrayBuffer);
@@ -74,12 +79,15 @@
     fileReader.readAsArrayBuffer(uploadedFile);
   }
 
-  async function handleDocxConversion(arrayBuffer: string | ArrayBuffer | null, fileType: string) {
+  async function handleDocxConversion(
+    arrayBuffer: string | ArrayBuffer | null,
+    fileType: string
+  ) {
     try {
-      if (fileType === 'docx' && arrayBuffer instanceof ArrayBuffer) {
+      if (fileType === "docx" && arrayBuffer instanceof ArrayBuffer) {
         const result = await mammoth.extractRawText({ arrayBuffer });
         downloadFile(result.value, "converted.docx");
-      } else if (fileType === 'pdf' && arrayBuffer instanceof ArrayBuffer) {
+      } else if (fileType === "pdf" && arrayBuffer instanceof ArrayBuffer) {
         const pdfDoc = await PDFDocument.load(arrayBuffer);
         const textContent = await extractTextFromPDF(pdfDoc);
         const docxContent = convertTextToDocx(textContent);
@@ -95,10 +103,12 @@
 
   async function extractTextFromPDF(pdfDoc: PDFDocument): Promise<string> {
     const pages = pdfDoc.getPages();
-    let textContent = '';
+    let textContent = "";
     for (const page of pages) {
       const textContentStream = await page.getTextContent();
-      textContent += textContentStream.items.map((item: any) => (item as any).str).join(' ');
+      textContent += textContentStream.items
+        .map((item: any) => (item as any).str)
+        .join(" ");
     }
     return textContent;
   }
@@ -107,8 +117,19 @@
     return text;
   }
 
+  //docx to pdf
   async function handlePdfConversion(arrayBuffer: string | ArrayBuffer | null) {
-    console.log("PDF conversion logic here.");
+    const pdfDoc = await PDFDocument.load(arrayBuffer);
+    const docxContent = await mammoth.convertToHtml({ arrayBuffer });
+    const pdfContent = convertHtmlToPdf(docxContent.value);
+    const pdfArrayBuffer = await pdfDoc.save();
+    downloadFile(pdfArrayBuffer, "converted.pdf");
+  }
+
+  function convertHtmlToPdf(html: string) {
+    const doc = new jsPDF();
+    doc.fromHTML(html);
+    return doc.output("arraybuffer");
   }
 
   async function handleXlsConversion(arrayBuffer: ArrayBuffer) {
@@ -117,7 +138,10 @@
     downloadFile(xlsData, "converted.xlsx");
   }
 
-  async function handlePptxConversion(arrayBuffer: ArrayBuffer, pptxFilePath: string) {
+  async function handlePptxConversion(
+    arrayBuffer: ArrayBuffer,
+    pptxFilePath: string
+  ) {
     try {
       const result = await mammoth.extractRawText({ arrayBuffer });
       const paragraphs = result.value.split("\n");
@@ -135,7 +159,7 @@
       console.log(`PPTX file created at: ${pptxFilePath}`);
     } catch (error) {
       console.error("Error converting DOCX to PPTX:", error);
-      alert("Failed to convert DOCX to PPTX. Please ensure the file is valid.");
+      alert("Failed to convert file to PPTX. Please ensure the file is valid.");
     }
   }
 </script>
@@ -145,13 +169,19 @@
 
 <div class="card w-[50%] pr-10 pb-10 pt-10 ml-[30%] mt-[-10%]">
   <div class="mt-0 ml-10">
-    <FileDropzone 
-      name="files" 
-      accept=".docx, .pdf, .pptx, .xls, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/pdf, application/vnd.openxmlformats-officedocument.presentationml.presentation, application/vnd.ms-excel" 
-      on:change={transcode} />
+    <FileDropzone
+      name="files"
+      accept=".docx, .pdf, .pptx, .xls, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/pdf, application/vnd.openxmlformats-officedocument.presentationml.presentation, application/vnd.ms-excel"
+      on:change={transcode}
+      class="flex justify-start space-x-72"
+    />
 
     <span style="color:aqua;">Select Format</span>
-    <select id="Docx_formats" class="select w-[65%] mt-5 ml-5" on:change={handleFormatChange}>
+    <select
+      id="Docx_formats"
+      class="select w-[65%] mt-5 ml-5"
+      on:change={handleFormatChange}
+    >
       <option value="" disabled selected>Select format</option>
       <option value="docx">docx</option>
       <option value="pdf">pdf</option>
@@ -159,7 +189,11 @@
       <option value="xls">xls</option>
     </select>
   </div>
-  <button type="button" on:click={convertAndDownloadFile} class="btn variant-filled-primary mt-5 ml-44 w-[50%]">
+  <button
+    type="button"
+    on:click={convertAndDownloadFile}
+    class="btn variant-filled-primary mt-5 ml-44 w-[50%]"
+  >
     Convert and Download File
   </button>
 </div>
