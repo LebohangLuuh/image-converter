@@ -13,13 +13,17 @@
   let error = '';
 
   onMount(async () => {
+    console.log('FFmpeg loading');
     try {
       ffmpeg = new FFmpeg();
-      ffmpeg.on('progress', ({ progress: p }) => {
-        progress = Math.round(p * 100);
+      ffmpeg.on('progress', ({ ratio }) => {
+        console.log('Conversion progress:', ratio);
+        progress = Math.round(ratio * 100);
+        console.log(`Conversion progress: ${progress}%`);
       });
       
       await ffmpeg.load();
+      console.log('FFmpeg loaded');
     } catch (err) {
       console.error('FFmpeg failed to load:', err);
     }
@@ -59,7 +63,6 @@
       const inputFileName = 'input' + getExtension(selectedFile.name);
       const outputFileName = `output.${selectedFormat}`;
 
-      // Write the file to memory
       await ffmpeg.writeFile(inputFileName, await fetchFile(selectedFile));
 
       // Run the FFmpeg command
@@ -72,12 +75,13 @@
       const data = await ffmpeg.readFile(outputFileName);
       const blob = new Blob([data], { type: `video/${selectedFormat}` });
       
-      // Create download link
+      //  download link
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `converted-video.${selectedFormat}`;
-      document.body.appendChild(a);
+      console.log('Download link:', a.href);
+      window.console.log('Download link:', a.href);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
