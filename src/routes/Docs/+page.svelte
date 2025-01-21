@@ -146,7 +146,7 @@
       const result = await mammoth.extractRawText({ arrayBuffer });
       const paragraphs = result.value.split("\n");
 
-      const pptx = new PptxGenJS.default();
+      const pptx = new PptxGenJS();
 
       paragraphs.forEach((paragraph, index) => {
         if (paragraph.trim()) {
