@@ -42,7 +42,7 @@
     const fileExtension = file.name.split(".").pop()?.toLowerCase();
     if (!fileExtension || !(fileExtension in SUPPORTED_FORMATS)) {
       throw new Error(`Unsupported file format: .${fileExtension}`);
-      console.error("Unsupported file format:", fileExtension `\n Size: ${file.size}`);
+      console.error("Unsupported file format:", fileExtension `\n Size: ${file.size}`); 
     }
     if (file.size > 100 * 1024 * 1024) {
       console.error("File size too large:", file.size);
