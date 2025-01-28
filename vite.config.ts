@@ -1,15 +1,15 @@
-import { sveltekit } from '@sveltejs/kit/vite';
-import plugin from '@tailwindcss/forms';
-import { defineConfig } from 'vite';
-
+import { sveltekit } from "@sveltejs/kit/vite";
+import { defineConfig } from "vite";
 
 export default defineConfig({
   plugins: [sveltekit()],
   optimizeDeps: {
-    include: ['@ffmpeg/ffmpeg']
-}
+    exclude: ["@ffmpeg/ffmpeg"],
+  },
+  server: {
+    headers: {
+      "Cross-Origin-Opener-Policy": "same-origin",
+      "Cross-Origin-Embedder-Policy": "same-origin",
+    },
+  },
 });
-  
-
-
-

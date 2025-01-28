@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { FFmpeg } from "@ffmpeg/ffmpeg";
-  import { fetchFile } from "@ffmpeg/util";
   import MediaButton from "$lib/components/MediaButton.svelte";
   import SideBar from "$lib/components/SideBar.svelte";
 

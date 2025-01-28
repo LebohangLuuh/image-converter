@@ -1,47 +1,42 @@
 <script lang="ts">
   import { FFmpeg } from "@ffmpeg/ffmpeg";
-  // @ts-ignore
-  import type { LogEvent } from "@ffmpeg/ffmpeg/dist/esm/types";
-  import { fetchFile, toBlobURL } from "@ffmpeg/util";
+  import { onMount } from "svelte";
 
-  let videoEl = $state<HTMLVideoElement>();
-
-  const baseURL = "https://unpkg.com/@ffmpeg/core-mt@0.12.6/dist/esm";
-  const videoURL =
-    "https://raw.githubusercontent.com/ffmpegwasm/testdata/master/video-15s.avi";
+  const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm";
 
   let message = $state("Click Start to Transcode");
 
-  async function transcode() {
-    const ffmpeg = new FFmpeg();
+  type AppState = "init" | "loaded" | "convert.start" | "convert.done";
+
+  let ffmpeg: FFmpeg;
+
+  async function loadFFMpeg() {
+    ffmpeg = new FFmpeg();
     message = "Loading ffmpeg-core.js";
-    ffmpeg.on("log", ({ message: msg }: LogEvent) => {
-      message = msg;
-      console.log(message);
-    });
+   
     await ffmpeg.load({
-      coreURL: await toBlobURL(`/ffmpeg-core.js`, "text/javascript"),
-      wasmURL: await toBlobURL(`/ffmpeg-core.wasm`, "application/wasm" ),
-      workerURL: await toBlobURL(`/ffmpeg-core.worker.js`,
-        "text/javascript"
-      ),
+      coreURL: `${baseURL}/ffmpeg-core.js`,
+      wasmURL: `${baseURL}/ffmpeg-core.wasm`,
     });
     message = "Start transcoding";
-    // await ffmpeg.writeFile('test.avi', await fetchFile(videoURL));
-    // await ffmpeg.exec(['-i', 'test.avi', 'test.mp4']);
-    // message = 'Complete transcoding';
-    // const data = await ffmpeg.readFile('test.mp4');
-    // console.log('done');
-    // videoEl.src = URL.createObjectURL(
-    // 	new Blob([(data as Uint8Array).buffer], { type: 'video/mp4' })
-    // );
+   
+  }
+
+  onMount(() => {
+    loadFFMpeg();
+  });
+
+  async function testFFMPEG() {
+    ffmpeg.exec(["-version"]);
+
+    ffmpeg.on("log", ({ message }) => {
+      console.log(message);
+    });
   }
 </script>
 
 <div>
-  <!-- svelte-ignore a11y-media-has-caption -->
-  <video  bind:this={videoEl} controls />
   <br />
-  <button on:click={transcode}>Start</button>
   <p>{message}</p>
+  <button onclick={testFFMPEG}>Start</button>
 </div>
