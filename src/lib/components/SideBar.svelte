@@ -4,10 +4,9 @@
 
   function shareWebsite() {
     if (navigator.share) {
-      navigator
-        .share({
-          title: "Multi-Media converstion",
-          text: "Check out this amazing website for media format conversion!",
+      navigator.share({
+          title: "Multi-Media conversion",
+          text: "Check out this amazing website for media format conversions!",
           url: window.location.href,
         })
         .then(() => console.log("Successful share"))
@@ -92,7 +91,7 @@
 
   li:hover {
     background: #24afb2;
-    transform: translateX(-50px);
+    transform: translateX(-25px);
   }
 
   li::before {
