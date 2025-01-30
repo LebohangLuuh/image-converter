@@ -53,7 +53,7 @@
       class={$page.url.pathname === "" ? "selected" : ""}
     >
       <button
-        style="letter-spacing: 0.5em; text-transform: uppercase;"
+        style="letter-spacing: 0.5em; text-transform: uppercase; color:white"
         aria-label="Share"
         on:click|preventDefault={shareWebsite}>Share</button
       >

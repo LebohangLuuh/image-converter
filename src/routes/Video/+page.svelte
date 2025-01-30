@@ -137,7 +137,7 @@
     </div>
 
     <div class="mt-4">
-      <span class="text-cyan-400">Select Format</span>
+      <span class="text-ptimary-500">Select Format</span>
       <select
         id="Video_formats"
         class="select w-[65%] mt-5 ml-5"
