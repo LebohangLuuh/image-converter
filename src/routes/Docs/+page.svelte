@@ -7,6 +7,7 @@
   import { PDFDocument } from "pdf-lib";
   import { downloadFile } from "../utils.js";
   import PptxGenJS from "pptxgenjs";
+  import jsPDF from "jspdf";
 
   let selectedFormat = "";
   let uploadedFile: Blob | null = null;
@@ -146,7 +147,7 @@
       const result = await mammoth.extractRawText({ arrayBuffer });
       const paragraphs = result.value.split("\n");
 
-      const pptx = new PptxGenJS();
+      const pptx = new PptxGenJS.default();
 
       paragraphs.forEach((paragraph, index) => {
         if (paragraph.trim()) {

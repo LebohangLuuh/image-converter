@@ -1,5 +1,6 @@
 <script lang="ts">
   import { FFmpeg } from "@ffmpeg/ffmpeg";
+  import { FileDropzone } from "@skeletonlabs/skeleton";
   import { onMount } from "svelte";
 
   const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm";
@@ -22,21 +23,84 @@
    
   }
 
+  const SUPPORTED_FORMATS = {
+  mp3: "audio/mpeg",
+  wav: "audio/wav",
+  ogg: "audio/ogg",
+  aac: "audio/aac",
+  m4a: "audio/x-m4a",};
+
+  let isConverting = $state(false);
+let progress = $state(0);
+let selectedFormat = $state("");
+
+async function convertAudio(file: File, format: keyof typeof SUPPORTED_FORMATS): Promise<Blob> {
+  isConverting = true;
+  progress = 0;
+
+  const inputFileName = "input_" + file.name;
+  const outputFileName = `output.${format}`;
+
+  // Write the file to FFmpeg's virtual file system
+  await ffmpeg.writeFile(inputFileName, new Uint8Array(await file.arrayBuffer()));
+
+  // progress reporting
+  ffmpeg.on("progress", ({ progress: p }) => {
+    progress = Math.round(p * 100);
+  });
+
+  // convert the file
+  await ffmpeg.exec(["-i", inputFileName, outputFileName]);
+  const data = await ffmpeg.readFile(outputFileName);
+
+  // Clean virtual system
+  await ffmpeg.deleteFile(inputFileName);
+  await ffmpeg.deleteFile(outputFileName);
+
+  isConverting = false;
+  return new Blob([data], { type: SUPPORTED_FORMATS[format] });
+}
+
+let fileDropzone: FileDropzone;
+
+async function handleDownload() {
+  if (!fileDropzone.files || fileDropzone.files.length === 0) {
+    alert("Please select a file first.");
+    return;
+  }
+
+  const file = fileDropzone.files[0];
+  const convertedBlob = await convertAudio(file, selectedFormat as keyof typeof SUPPORTED_FORMATS);
+
+  // download link
+  const url = URL.createObjectURL(convertedBlob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `converted.${selectedFormat}`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
   onMount(() => {
     loadFFMpeg();
   });
 
-  async function testFFMPEG() {
-    ffmpeg.exec(["-version"]);
-
-    ffmpeg.on("log", ({ message }) => {
-      console.log(message);
-    });
-  }
 </script>
 
-<div>
-  <br />
-  <p>{message}</p>
-  <button onclick={testFFMPEG}>Start</button>
+<FileDropzone bind:this={fileDropzone} id="file-dropzone" name="files" accept="audio/*" class="flex justify-start space-x-72"></FileDropzone>
+
+<div class="format-selector flex">
+  <label for="format-select" class="format-label">Select Format</label>
+  <select id="format-select" class="select w-[65%]" bind:value={selectedFormat} disabled={isConverting}>
+    <option value="">Select format</option>
+    {#each Object.keys(SUPPORTED_FORMATS) as format}
+      <option value={format}>{format.toUpperCase()}</option>
+    {/each}
+  </select>
 </div>
+
+<button type="button" class="btn variant-filled-primary convert-button" onclick={handleDownload} disabled={isConverting || !selectedFormat}>
+  {isConverting ? `Converting... ${progress}%` : "Download Audio"}
+</button>
