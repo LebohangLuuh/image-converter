@@ -1,5 +1,7 @@
 <script lang="ts">
-  import { FFmpeg } from "@ffmpeg/ffmpeg";
+  import MediaButton from "$lib/components/MediaButton.svelte";
+  import SideBar from "$lib/components/SideBar.svelte";
+import { FFmpeg } from "@ffmpeg/ffmpeg";
   import { FileDropzone } from "@skeletonlabs/skeleton";
   import { onMount } from "svelte";
 
@@ -24,17 +26,16 @@
   }
 
   const SUPPORTED_FORMATS = {
-  mp3: "audio/mpeg",
-  wav: "audio/wav",
-  ogg: "audio/ogg",
-  aac: "audio/aac",
-  m4a: "audio/x-m4a",};
+  mp4: "video/mpeg",
+  webm: "video/webm",
+  avi: "video/avi",
+};
 
   let isConverting = $state(false);
 let progress = $state(0);
 let selectedFormat = $state("");
 
-async function convertAudio(file: File, format: keyof typeof SUPPORTED_FORMATS): Promise<Blob> {
+async function convertVideo(file: File, format: keyof typeof SUPPORTED_FORMATS): Promise<Blob> {
   isConverting = true;
   progress = 0;
 
@@ -70,7 +71,7 @@ async function handleDownload() {
   }
 
   const file = fileDropzone.files[0];
-  const convertedBlob = await convertAudio(file, selectedFormat as keyof typeof SUPPORTED_FORMATS);
+  const convertedBlob = await convertVideo(file, selectedFormat as keyof typeof SUPPORTED_FORMATS);
 
   // download link
   const url = URL.createObjectURL(convertedBlob);
@@ -89,7 +90,12 @@ async function handleDownload() {
 
 </script>
 
-<FileDropzone bind:this={fileDropzone} id="file-dropzone" name="files" accept="audio/*" class="flex justify-start space-x-72"></FileDropzone>
+<MediaButton />
+<SideBar />
+
+<div class="card w-[50%] pr-10 pb-10 pt-10 ml-[30%] mt-[-10%]">
+  <div class=" mt-0 ml-10">
+<FileDropzone bind:this={fileDropzone} id="file-dropzone" name="files" accept="video/*" class="flex justify-start space-x-72"></FileDropzone>
 
 <div class="format-selector flex">
   <label for="format-select" class="format-label">Select Format</label>
@@ -99,6 +105,8 @@ async function handleDownload() {
       <option value={format}>{format.toUpperCase()}</option>
     {/each}
   </select>
+</div>
+</div>
 </div>
 
 <button type="button" class="btn variant-filled-primary convert-button" onclick={handleDownload} disabled={isConverting || !selectedFormat}>

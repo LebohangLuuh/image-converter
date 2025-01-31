@@ -116,7 +116,7 @@
 
 <div class="card w-[50%] pr-10 pb-10 pt-10 ml-[30%] mt-[-10%]">
   <div class=" mt-0 ml-10">
-    <FileDropzone bind:this={fileDropzone} id="file-dropzone" name="files" accept="audio/*" class="flex justify-start space-x-72" ></FileDropzone>
+    <FileDropzone bind:this={fileDropzone} id="file-dropzone" name="files" accept="video/*" class="flex justify-start space-x-72" ></FileDropzone>
 
     <div class="format-selector flex">
       <label for="format-select" class="format-label">Select Format</label>

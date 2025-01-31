@@ -1,102 +1,93 @@
 <script lang="ts">
-  import { onMount } from "svelte";
-  import { FFmpeg } from "@ffmpeg/ffmpeg";
   import MediaButton from "$lib/components/MediaButton.svelte";
   import SideBar from "$lib/components/SideBar.svelte";
+import { FFmpeg } from "@ffmpeg/ffmpeg";
+  import { FileDropzone } from "@skeletonlabs/skeleton";
+  import { onMount } from "svelte";
+
+  const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm";
+
+  let message = $state("Click Start to Transcode");
+
+  type AppState = "init" | "loaded" | "convert.start" | "convert.done";
 
   let ffmpeg: FFmpeg;
-  let isLoading = false;
-  let progress = 0;
-  let selectedFile: File | null = null;
-  let selectedFormat = "";
-  let error = "";
 
-  onMount(async () => {
-    console.log("FFmpeg loading");
-    try {
-      ffmpeg = new FFmpeg();
-      ffmpeg.on("progress", (event: any) => {
-        console.log("Conversion progress:", event.ratio);
-        progress = Math.round(event.ratio * 100);
-        console.log(`Conversion progress: ${progress}%`);
-      });
+  async function loadFFMpeg() {
+    ffmpeg = new FFmpeg();
+    message = "Loading ffmpeg-core.js";
+   
+    await ffmpeg.load({
+      coreURL: `${baseURL}/ffmpeg-core.js`,
+      wasmURL: `${baseURL}/ffmpeg-core.wasm`,
+    });
+    message = "Start transcoding";
+   
+  }
 
-      await ffmpeg.load();
-      console.log("FFmpeg loaded");
-    } catch (err) {
-      console.error("FFmpeg failed to load:", err);
-    }
+  const SUPPORTED_FORMATS = {
+  mp4: "video/mpeg",
+  webm: "video/webm",
+  avi: "video/avi",
+};
+
+  let isConverting = $state(false);
+let progress = $state(0);
+let selectedFormat = $state("");
+
+async function convertVideo(file: File, format: keyof typeof SUPPORTED_FORMATS): Promise<Blob> {
+  isConverting = true;
+  progress = 0;
+
+  const inputFileName = "input_" + file.name;
+  const outputFileName = `output.${format}`;
+
+  // Write the file to FFmpeg's virtual file system
+  await ffmpeg.writeFile(inputFileName, new Uint8Array(await file.arrayBuffer()));
+
+  // progress reporting
+  ffmpeg.on("progress", ({ progress: p }) => {
+    progress = Math.round(p * 100);
   });
 
-  function handleDrop(event: DragEvent) {
-    event.preventDefault();
-    if (event.dataTransfer?.files) {
-      const file = event.dataTransfer.files[0];
-      if (file?.type.startsWith("video/")) {
-        selectedFile = file;
-      }
-    }
+  // convert the file
+  await ffmpeg.exec(["-i", inputFileName, outputFileName]);
+  const data = await ffmpeg.readFile(outputFileName);
+
+  // Clean virtual system
+  await ffmpeg.deleteFile(inputFileName);
+  await ffmpeg.deleteFile(outputFileName);
+
+  isConverting = false;
+  return new Blob([data], { type: SUPPORTED_FORMATS[format] });
+}
+
+let fileDropzone: FileDropzone;
+
+async function handleDownload() {
+  if (!fileDropzone.files || fileDropzone.files.length === 0) {
+    alert("Please select a file first.");
+    return;
   }
 
-  function handleFileSelection(event: Event) {
-    const input = event.target as HTMLInputElement;
-    if (input.files?.length) {
-      selectedFile = input.files[0];
-      console.log("Selected file:", selectedFile.name);
-    }
-  }
+  const file = fileDropzone.files[0];
+  const convertedBlob = await convertVideo(file, selectedFormat as keyof typeof SUPPORTED_FORMATS);
 
-  async function convertVideo() {
-    if (!selectedFile || !selectedFormat) return;
+  // download link
+  const url = URL.createObjectURL(convertedBlob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `converted.${selectedFormat}`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 
-    console.log("Selected format:", selectedFormat);
+  onMount(() => {
+    loadFFMpeg();
+  });
 
-    try {
-      error = "";
-      isLoading = true;
-      progress = 0;
-
-      console.log(
-        "Converting video : ",
-        selectedFile.name,
-        "to format: ",
-        selectedFormat,
-        "progress: ",
-        progress
-      );
-      const inputFileName = "input" + getExtension(selectedFile.name);
-      const outputFileName = `output.${selectedFormat}`;
-
-      await ffmpeg.writeFile(inputFileName, await fetchFile(selectedFile));
-
-      // Run the FFmpeg command
-      await ffmpeg.exec(["-i", inputFileName, outputFileName]);
-
-      // Read the output file
-      const data = await ffmpeg.readFile(outputFileName);
-      const blob = new Blob([data], { type: `video/${selectedFormat}` });
-
-      //  download link
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `converted-video.${selectedFormat}`;
-      console.log("Download link:", a.href);
-      window.console.log("Download link:", a.href);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error("Conversion error:", err);
-      error = "Failed to convert video. Please try again.";
-    } finally {
-      isLoading = false;
-    }
-  }
-
-  function getExtension(filename: string): string {
-    return "." + filename.split(".").pop();
-  }
 </script>
 
 <MediaButton />
@@ -104,76 +95,39 @@
 
 <div class="card w-[50%] pr-10 pb-10 pt-10 ml-[30%] mt-[-10%]">
   <div class="mt-0 ml-10">
-    <div
-      class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-500"
-      on:click={() => {
-        const fileInput = document.getElementById("fileInput");
-        if (fileInput) fileInput.click();
-      }}
-      on:keydown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          const fileInput = document.getElementById("fileInput");
-          if (fileInput) fileInput.click();
-        }
-      }}
-      on:dragover|preventDefault
-      on:drop|preventDefault={handleDrop}
-      role="button"
-      tabindex="0"
-      aria-label="File input"
-    >
-      <input
-        type="file"
-        id="fileInput"
-        accept="video/*"
-        class="hidden"
-        on:change={handleFileSelection}
-      />
-      {#if selectedFile}
-        <p class="text-primary-500">Selected: {selectedFile.name}</p>
-      {:else}
-        <p>Drag and drop a video file here or click to select</p>
-      {/if}
-    </div>
+    <FileDropzone bind:this={fileDropzone} id="file-dropzone" name="files" accept="video/*" class="flex justify-start space-x-72"></FileDropzone>
 
-    <div class="mt-4">
-      <span class="text-ptimary-500">Select Format</span>
-      <select
-        id="Video_formats"
-        class="select w-[65%] mt-5 ml-5"
-        bind:value={selectedFormat}
-      >
-        <option value="" disabled selected>Select format</option>
-        <option value="webm">webm</option>
-        <option value="mp4">mp4</option>
-        <option value="avi">avi</option>
+    <div class="format-selector flex">
+      <label for="format-select" class="format-label">Select Format</label>
+      <select id="format-select" class="select w-[65%]" bind:value={selectedFormat} disabled={isConverting}>
+        <option value="">Select format</option>
+        {#each Object.keys(SUPPORTED_FORMATS) as format}
+          <option value={format}>{format.toUpperCase()}</option>
+        {/each}
       </select>
     </div>
   </div>
 
-  <button
-    type="button"
-    class="btn variant-filled-primary mt-5 ml-44 w-[50%]"
-    on:click={convertVideo}
-    disabled={isLoading || !selectedFormat || !selectedFile}
-  >
-    {#if isLoading}
-      Converting... {progress}%
-    {:else}
-      Convert Video
-    {/if}
+  <button type="button" class="btn variant-filled-primary convert-button" onclick={handleDownload} disabled={isConverting || !selectedFormat}>
+    {isConverting ? `Converting... ${progress}%` : "Download Video"}
   </button>
 
-  {#if error}
-    <div class="mt-4 p-4 bg-red-100 text-red-800 rounded">
-      {error}
-    </div>
-  {/if}
 </div>
 
 <style>
-  :global(body) {
-    background-color: #1a1a1a;
-    color: #ffffff;
+  .format-selector {
+    margin-top: 1.25rem;
+  }
+
+  .format-label {
+    color: #24afb2;
+    margin-right: 1.25rem;
+  }
+
+  .convert-button {
+    width: 50%;
+    margin: 1.25rem auto;
+    display: block;
+    color: white;
   }
 </style>

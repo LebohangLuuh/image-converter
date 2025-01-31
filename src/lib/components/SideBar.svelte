@@ -47,16 +47,9 @@
     >
       <a href=".//../Video">Video</a>
     </li>
-    <li
-      style="--i:1;"
-      data-icon="&#xf064;"
-      class={$page.url.pathname === "" ? "selected" : ""}
-    >
-      <button
-        style="letter-spacing: 0.5em; text-transform: uppercase; color:white"
-        aria-label="Share"
-        on:click|preventDefault={shareWebsite}>Share</button
-      >
+    <li style="--i:1;" data-icon="&#xf064;" class={$page.url.pathname === "" ? "selected" : ""} >
+      <button style="letter-spacing: 0.5em; text-transform: uppercase; color:white"
+        aria-label="Share" on:click|preventDefault={shareWebsite}>Share</button>
     </li>
   </ul>
 </div>
@@ -64,7 +57,8 @@
 <style>
   .selected {
     background: #24afb2;
-    transform: translateX(-50px);
+    transform: translateX(-25px);
+    pointer-events: none; 
   }
 
   .selected::before {
@@ -91,7 +85,7 @@
 
   li:hover {
     background: #24afb2;
-    transform: translateX(-25px);
+    transform: translateX(-50px);
   }
 
   li::before {

@@ -5,7 +5,7 @@
   import { LightSwitch } from "@skeletonlabs/skeleton";
 </script>
 
-<LightSwitch class="absolute top-16 left-14 size-10" style="color: #ff5733;" />
+<!-- <LightSwitch class="absolute top-16 left-14 size-10" style="color: #ff5733;" /> -->
 
 <MediaButton />
 <SideBar />
