@@ -40,7 +40,7 @@
 		"@sveltejs/vite-plugin-svelte": "^4.0.0",
 		"@tailwindcss/typography": "^0.5.14",
 		"@types/file-saver": "^2.0.7",
-		"@types/node": "^22.10.0",
+		"@types/node": "^20.19.2",
 		"autoprefixer": "^10.4.20",
 		"publint": "^0.2.0",
 		"svelte": "^5.0.0",
