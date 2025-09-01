@@ -29,7 +29,7 @@
   async function loadFFMpeg() {
     try {
       ffmpeg = new FFmpeg();
-      
+
       // Set up logging
       ffmpeg.on("log", ({ message }) => {
         console.log("FFmpeg:", message);
@@ -43,7 +43,7 @@
       });
 
       loadingMessage = "Loading FFmpeg core...";
-      
+
       await ffmpeg.load({
         coreURL: `${baseURL}/ffmpeg-core.js`,
         wasmURL: `${baseURL}/ffmpeg-core.wasm`,
@@ -53,7 +53,6 @@
       isFFmpegLoaded = true;
       loadingMessage = "FFmpeg loaded successfully!";
       console.log("FFmpeg loaded successfully");
-      
     } catch (error) {
       console.error("Failed to load FFmpeg:", error);
       loadingMessage = "Failed to load FFmpeg. Please refresh the page.";
@@ -64,16 +63,16 @@
     try {
       const input = event.target as HTMLInputElement;
       const files = input.files;
-      
+
       if (!files || files.length === 0) {
         alert("Please select a file.");
         return;
       }
 
       const file = files[0];
-      
+
       // Validate file type
-      if (!file.type.startsWith('audio/')) {
+      if (!file.type.startsWith("audio/")) {
         alert("Please select a valid audio file.");
         return;
       }
@@ -87,7 +86,6 @@
 
       uploadedFile = file;
       console.log("Audio file uploaded:", file);
-      
     } catch (error) {
       console.error("Error handling file upload:", error);
       alert("Failed to upload file.");
@@ -111,7 +109,7 @@
 
     try {
       // Generate unique filenames
-      const inputFileName = `input_${Date.now()}.${uploadedFile.name.split('.').pop()}`;
+      const inputFileName = `input_${Date.now()}.${uploadedFile.name.split(".").pop()}`;
       const outputFileName = `output_${Date.now()}.${selectedFormat}`;
 
       console.log(`Converting ${inputFileName} to ${outputFileName}`);
@@ -121,14 +119,16 @@
       await ffmpeg.writeFile(inputFileName, inputData);
 
       // Get conversion parameters
-      const formatConfig = SUPPORTED_FORMATS[selectedFormat as keyof typeof SUPPORTED_FORMATS];
-      
+      const formatConfig =
+        SUPPORTED_FORMATS[selectedFormat as keyof typeof SUPPORTED_FORMATS];
+
       // Build FFmpeg command
       const command = [
-        "-i", inputFileName,
+        "-i",
+        inputFileName,
         ...formatConfig.quality,
         "-y", // Overwrite output file
-        outputFileName
+        outputFileName,
       ];
 
       console.log("FFmpeg command:", command);
@@ -138,7 +138,7 @@
 
       // Read the converted file
       const outputData = await ffmpeg.readFile(outputFileName);
-      
+
       // Create blob and download
       const blob = new Blob([outputData], { type: formatConfig.mime });
       downloadConvertedFile(blob, `converted.${selectedFormat}`);
@@ -148,7 +148,6 @@
       await ffmpeg.deleteFile(outputFileName);
 
       console.log("Conversion completed successfully");
-      
     } catch (error) {
       console.error("Conversion failed:", error);
       alert(`Conversion failed: ${error.message}`);
@@ -188,16 +187,17 @@
 
 <div class="card w-[50%] pr-10 pb-10 pt-10 ml-[30%] mt-[-10%]">
   <div class="mt-0 ml-10">
-    
     {#if !isFFmpegLoaded}
       <div class="text-center p-6">
         <div class="animate-spin text-4xl mb-4">⚙️</div>
         <div class="text-lg font-semibold">{loadingMessage}</div>
-        <div class="text-sm opacity-75 mt-2">This may take a few moments...</div>
+        <div class="text-sm opacity-75 mt-2">
+          This may take a few moments...
+        </div>
       </div>
     {:else}
-      <FileDropzone 
-        name="audio-files" 
+      <FileDropzone
+        name="audio-files"
         accept="audio/*"
         on:change={handleFileUpload}
         class="flex justify-start space-x-72"
@@ -215,13 +215,16 @@
       </FileDropzone>
 
       <div class="format-selector mt-5">
-        <label for="format-select" class="format-label text-primary-500 font-semibold">
+        <label
+          for="format-select"
+          class="format-label text-primary-500 font-semibold"
+        >
           Select Output Format:
         </label>
-        <select 
-          id="format-select" 
-          class="select w-[65%] mt-2" 
-          bind:value={selectedFormat} 
+        <select
+          id="format-select"
+          class="select w-[65%] mt-2"
+          bind:value={selectedFormat}
           disabled={isConverting}
         >
           <option value="">Choose format...</option>
@@ -249,8 +252,8 @@
             <span class="text-sm">{progress}%</span>
           </div>
           <div class="w-full bg-surface-300-600-token rounded-full h-2">
-            <div 
-              class="bg-primary-500 h-2 rounded-full transition-all duration-300" 
+            <div
+              class="bg-primary-500 h-2 rounded-full transition-all duration-300"
               style="width: {progress}%"
             ></div>
           </div>
@@ -268,7 +271,10 @@
     type="button"
     class="btn variant-filled-primary convert-button mt-6"
     on:click={convertAudio}
-    disabled={isConverting || !selectedFormat || !uploadedFile || !isFFmpegLoaded}
+    disabled={isConverting ||
+      !selectedFormat ||
+      !uploadedFile ||
+      !isFFmpegLoaded}
   >
     {#if !isFFmpegLoaded}
       Loading FFmpeg...

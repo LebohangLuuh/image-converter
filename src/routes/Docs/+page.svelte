@@ -249,8 +249,8 @@
         standardFontDataUrl: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/standard_fonts/",
         useSystemFonts: true,
         disableFontFace: false,
-        maxImageSize: 1024 * 1024, // Limit image processing
-        isEvalSupported: false, // Security
+        maxImageSize: 1024 * 1024,
+        isEvalSupported: false,
         disableRange: false,
         disableStream: false
       });
@@ -261,7 +261,7 @@
       // Dynamic limits based on file size
       const maxPages = Math.min(pdf.numPages, file.size > 10 * 1024 * 1024 ? 100 : 300);
       const maxCharsPerPage = file.size > 5 * 1024 * 1024 ? 2000 : 5000;
-      const maxTotalChars = 500000; // 500K characters max
+      const maxTotalChars = 500000;
       
       let totalChars = 0;
 
@@ -544,7 +544,6 @@
         const text = await file.text();
         
         updateProgress(40, "Parsing text content...");
-        // Try to detect CSV-like content
         const lines = text.split('\n').filter(line => line.trim());
         const hasCommas = lines.some(line => line.includes(','));
         const hasTabs = lines.some(line => line.includes('\t'));
@@ -586,7 +585,7 @@
 
     // Split text into paragraphs for better formatting
     const paragraphs = safeText.split(/\n\s*\n/).filter(p => p.trim());
-    const paragraphXml = paragraphs.map(para => 
+    const paragraphXml = paragraphs.map(para =>
       `    <w:p><w:r><w:t>${para.replace(/\n/g, '</w:t></w:r><w:r><w:br/></w:r><w:r><w:t>')}</w:t></w:r></w:p>`
     ).join('\n');
 
@@ -610,7 +609,7 @@ ${paragraphXml}
         .replace(/[\r\n]/g, "");
 
       const lines = text.split('\n');
-      const maxLineLength = 85; // Slightly reduced for better margins
+      const maxLineLength = 85;
       const wrappedLines: string[] = [];
 
       // Enhanced text wrapping
