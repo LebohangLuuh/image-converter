@@ -648,7 +648,7 @@
         name="video-files"
         accept="video/*,.mp4,.avi,.mov,.mkv,.webm,.flv,.wmv,.m4v,.3gp"
         on:change={handleFileUpload}
-        class="flex justify-start space-x-72"
+        class="flex justify-start space-x-72 m-auto"
         disabled={isConverting}
       >
         <svelte:fragment slot="message">
@@ -699,7 +699,7 @@
           </label>
           <select
             id="format-select"
-            class="select w-full"
+            class="select w-full m-5"
             bind:value={selectedFormat}
             disabled={isConverting}
           >

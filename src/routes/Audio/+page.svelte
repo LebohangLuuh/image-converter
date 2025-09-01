@@ -223,7 +223,7 @@
         </label>
         <select
           id="format-select"
-          class="select w-[65%] mt-2"
+          class="select w-full my-5 mt-2"
           bind:value={selectedFormat}
           disabled={isConverting}
         >
@@ -235,7 +235,7 @@
       </div>
 
       {#if uploadedFile}
-        <div class="mt-4 p-3 bg-surface-100-800-token rounded-lg">
+        <div class="mt-4 p-3 bg-surface-100-800-token rounded-lg ">
           <div class="text-sm font-semibold text-surface-700-200-token">
             📁 {uploadedFile.name}
           </div>
@@ -246,7 +246,7 @@
       {/if}
 
       {#if isConverting}
-        <div class="mt-4 p-4 bg-primary-100-800-token rounded-lg">
+        <div class="mt-4 p-4 bg-primary-100-800-token rounded-lg m-10">
           <div class="flex justify-between items-center mb-2">
             <span class="text-sm font-semibold">Converting...</span>
             <span class="text-sm">{progress}%</span>
